@@ -1,71 +1,176 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  Activity, Archive, ArrowUpRight, Bell, Bookmark, CalendarDays, Calculator,
-  ChevronDown, ChevronRight, Clock3, FileText, FolderKanban, LayoutDashboard,
-  Link2, ListFilter, MoreHorizontal, Plus, Search, Settings, SlidersHorizontal,
-  Sparkles, Star, X,
+  Activity, Archive, ArrowLeft, ArrowUpRight, Bell, Bookmark,
+  Calculator, ChevronDown, Clock3, Eye, FileText, FolderKanban,
+  LayoutDashboard, Pencil, Plus, Search, Settings, Sparkles, Trash2, X,
 } from "lucide-react";
 
-type ProjectStatus = "Devam Ediyor" | "Planlama" | "Tamamlandı";
 type Project = {
-  id: string; name: string; scope: string; status: ProjectStatus;
-  due: string; owner: string; progress: number; updated: string; location: string;
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
 };
+type ModalMode = "create" | "edit" | null;
 
-const initialProjects: Project[] = [
-  { id: "MP-024", name: "Merkez Ofis Mekanik Tesisatı", scope: "Mekanik · Koordinasyon", status: "Devam Ediyor", due: "19 Kas", owner: "EA", progress: 68, updated: "Bugün 10:42", location: "Ankara · Örnek proje" },
-  { id: "MP-021", name: "Üretim Tesisi Yenileme", scope: "HVAC · Yangın", status: "Devam Ediyor", due: "24 Kas", owner: "MK", progress: 46, updated: "Dün 16:18", location: "Örnek proje" },
-  { id: "MP-019", name: "Konut Blokları", scope: "Sıhhi Tesisat", status: "Planlama", due: "02 Ara", owner: "AY", progress: 22, updated: "12 Kas", location: "Örnek proje" },
-  { id: "MP-018", name: "Veri Merkezi Altyapısı", scope: "Mekanik Sistemler", status: "Planlama", due: "08 Ara", owner: "SD", progress: 12, updated: "10 Kas", location: "Örnek proje" },
-  { id: "MP-012", name: "Sağlık Yapısı Projesi", scope: "Mekanik Koordinasyon", status: "Tamamlandı", due: "Tamamlandı", owner: "EA", progress: 100, updated: "06 Kas", location: "Örnek proje" },
-];
-const statusOrder: ProjectStatus[] = ["Devam Ediyor", "Planlama", "Tamamlandı"];
-const stateClass = (status: ProjectStatus) =>
-  status === "Devam Ediyor" ? "in-progress" : status === "Planlama" ? "planning" : "done";
+const STORAGE_KEY = "mechpro.projects.v1";
+
+function normalizeProjectName(value: string): string {
+  return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("tr-TR");
+}
+
+function readProjects(): Project[] {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (!saved) return [];
+    const parsed: unknown = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed as Project[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 function App() {
-  const [projects, setProjects] = useState(initialProjects);
-  const [selectedId, setSelectedId] = useState("MP-024");
-  const [activeNav, setActiveNav] = useState("Projeler");
+  const [projects, setProjects] = useState<Project[]>(readProjects);
+  const [activeNav, setActiveNav] = useState("Genel Bakış");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [isProjectDetail, setIsProjectDetail] = useState(false);
   const [query, setQuery] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [showInspector, setShowInspector] = useState(true);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const selectedProject = projects.find((project) => project.id === selectedId) ?? projects[0];
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [formError, setFormError] = useState("");
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    } catch {
+      // The UI remains usable when browser storage is unavailable.
+    }
+  }, [projects]);
+
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
   const filteredProjects = useMemo(() => {
-    const value = query.trim().toLocaleLowerCase("tr-TR");
-    if (!value) return projects;
+    const term = query.trim().toLocaleLowerCase("tr-TR");
+    if (!term) return projects;
     return projects.filter((project) =>
-      [project.id, project.name, project.scope, project.owner]
-        .some((field) => field.toLocaleLowerCase("tr-TR").includes(value)),
+      [project.code, project.name, project.description]
+        .some((value) => value.toLocaleLowerCase("tr-TR").includes(term)),
     );
   }, [projects, query]);
 
-  const createProject = (event: FormEvent<HTMLFormElement>) => {
+  const goTo = (page: string) => {
+    setActiveNav(page);
+    setIsProjectDetail(false);
+    setQuery("");
+  };
+
+  const openCreate = () => {
+    setEditingProjectId(null);
+    setProjectName("");
+    setProjectDescription("");
+    setFormError("");
+    setModalMode("create");
+  };
+
+  const openEdit = (project: Project) => {
+    setEditingProjectId(project.id);
+    setProjectName(project.name);
+    setProjectDescription(project.description);
+    setFormError("");
+    setModalMode("edit");
+  };
+
+  const saveProject = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const name = newProjectName.trim();
-    if (!name) return;
-    const nextNumber = Math.max(0, ...projects.map((project) => Number(project.id.slice(3)))) + 1;
-    const project: Project = {
-      id: "MP-" + String(nextNumber).padStart(3, "0"),
-      name, scope: "Yeni çalışma", status: "Planlama", due: "Belirlenecek",
-      owner: "MP", progress: 0, updated: "Az önce", location: "Yeni proje",
-    };
-    setProjects((current) => [project, ...current]);
-    setSelectedId(project.id);
-    setNewProjectName("");
-    setShowCreate(false);
+    const cleanName = projectName.trim().replace(/\s+/g, " ");
+    if (!cleanName) {
+      setFormError("Proje adı boş bırakılamaz.");
+      return;
+    }
+    const key = normalizeProjectName(cleanName);
+    const duplicate = projects.find((project) =>
+      normalizeProjectName(project.name) === key && project.id !== editingProjectId,
+    );
+    if (duplicate) {
+      setFormError("Bu isimde bir proje zaten kayıtlı. Farklı bir isim kullan.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    if (modalMode === "edit" && editingProjectId) {
+      setProjects((current) => current.map((project) =>
+        project.id === editingProjectId
+          ? { ...project, name: cleanName, description: projectDescription.trim(), updatedAt: now }
+          : project,
+      ));
+      setSelectedProjectId(editingProjectId);
+      setActiveNav("Projeler");
+      setIsProjectDetail(true);
+    } else {
+      const nextNumber = Math.max(0, ...projects.map((project) => Number(project.code.replace("MP-", "")))) + 1;
+      const project: Project = {
+        id: crypto.randomUUID(),
+        code: "MP-" + String(nextNumber).padStart(4, "0"),
+        name: cleanName,
+        description: projectDescription.trim(),
+        createdAt: now,
+        updatedAt: now,
+      };
+      setProjects((current) => [project, ...current]);
+      setSelectedProjectId(project.id);
+      setActiveNav("Projeler");
+      setIsProjectDetail(false);
+    }
+    setModalMode(null);
+  };
+
+  const viewProject = (project: Project) => {
+    setSelectedProjectId(project.id);
+    setActiveNav("Projeler");
+    setIsProjectDetail(true);
+  };
+
+  const deleteProject = (project: Project) => {
+    const confirmed = window.confirm(
+      "\"" + project.name + "\" projesini silmek istediğine emin misin?\n\nBu işlem geri alınamaz.",
+    );
+    if (!confirmed) return;
+    setProjects((current) => current.filter((item) => item.id !== project.id));
+    if (selectedProjectId === project.id) setSelectedProjectId(null);
+    setIsProjectDetail(false);
     setActiveNav("Projeler");
   };
 
-  const navItems = [
-    { label: "Genel Bakış", icon: LayoutDashboard },
-    { label: "Projeler", icon: FolderKanban },
-    { label: "Hesaplamalar", icon: Calculator },
-    { label: "Kütüphane", icon: FileText },
-    { label: "Raporlar", icon: Activity },
+  const navGroups = [
+    {
+      title: "ÇALIŞMA ALANI",
+      items: [
+        { label: "Genel Bakış", icon: LayoutDashboard },
+        { label: "Projeler", icon: FolderKanban },
+        { label: "Hesaplamalar", icon: Calculator },
+        { label: "Kütüphane", icon: FileText },
+        { label: "Raporlar", icon: Activity },
+      ],
+    },
+    {
+      title: "GÖRÜNÜMLER",
+      items: [
+        { label: "Son Çalışmalar", icon: Clock3 },
+        { label: "Yıldızlılar", icon: Bookmark },
+        { label: "Arşiv", icon: Archive },
+      ],
+    },
   ];
 
   return (
@@ -74,154 +179,104 @@ function App() {
         <div className="window-controls"><i /><i /><i /></div>
         <div className="workspace-switcher">
           <div className="brand-mark">M</div>
-          <div className="brand-copy"><strong>MechPro</strong><span>ENGINEERING WORKSPACE</span></div>
+          <div className="brand-copy"><strong>MechPro</strong><span>DESIGN & ENGINEERING</span></div>
           <ChevronDown size={14} className="workspace-chevron" />
         </div>
-        <button className="new-project-button" onClick={() => setShowCreate(true)}><Plus size={16} /> Yeni proje</button>
-        <div className="sidebar-heading">ÇALIŞMA ALANI</div>
-        <nav className="sidebar-nav">
-          {navItems.map(({ label, icon: Icon }) => (
-            <button key={label} className={"nav-item " + (activeNav === label ? "active" : "")} onClick={() => setActiveNav(label)}>
-              <Icon size={16} strokeWidth={1.8} /><span>{label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-heading secondary-heading">GÖRÜNÜMLER</div>
-        <nav className="sidebar-nav">
-          <button className="nav-item" onClick={() => setActiveNav("Son Çalışmalar")}><Clock3 size={16} /><span>Son Çalışmalar</span></button>
-          <button className="nav-item" onClick={() => setActiveNav("Yıldızlılar")}><Bookmark size={16} /><span>Yıldızlılar</span></button>
-          <button className="nav-item" onClick={() => setActiveNav("Arşiv")}><Archive size={16} /><span>Arşiv</span></button>
-        </nav>
+
+        {navGroups.map((group) => (
+          <div className="nav-group" key={group.title}>
+            <div className="sidebar-heading">{group.title}</div>
+            <nav className="sidebar-nav">
+              {group.items.map(({ label, icon: Icon }) => (
+                <button key={label} className={"nav-item " + (activeNav === label ? "active" : "")}
+                  onClick={() => goTo(label)}>
+                  <Icon size={16} strokeWidth={1.8} /><span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        ))}
+
         <div className="sidebar-heading secondary-heading">ÇALIŞMA MODÜLLERİ</div>
-        <div className="module-placeholder"><div className="module-placeholder-icon"><Sparkles size={15} /></div><span>Modül yapısını birlikte şekillendireceğiz.</span></div>
+        <div className="module-placeholder"><Sparkles size={15} /><span>Bu alan daha sonra modüllerle doldurulacak.</span></div>
+
         <div className="sidebar-bottom">
-          <div className="offline-card"><span className="online-dot" /><div><strong>Yerel çalışma</strong><small>Çevrimdışı arayüz önizlemesi</small></div></div>
-          <button className="nav-item settings-item" onClick={() => setActiveNav("Ayarlar")}><Settings size={16} /><span>Ayarlar</span></button>
-          <div className="sidebar-version">MECHPRO · PREVIEW 0.2</div>
+          <div className="offline-card">
+            <span className="online-dot" />
+            <div><strong>Yerel çalışma</strong><small>Veriler bu bilgisayarda saklanır</small></div>
+          </div>
+          <button className={"nav-item settings-item " + (activeNav === "Ayarlar" ? "active" : "")} onClick={() => goTo("Ayarlar")}>
+            <Settings size={16} /><span>Ayarlar</span>
+          </button>
+          <div className="sidebar-version">MECHPRO · PREVIEW 0.3</div>
         </div>
       </aside>
 
       <main className="main-area">
         <header className="topbar">
           <div className="breadcrumb">
-            <div className="mini-brand">M</div><strong>MechPro Workspace</strong><ChevronDown size={14} /><Star size={15} className="topbar-star" />
+            <div className="mini-brand">M</div><strong>MechPro Workspace</strong><ChevronDown size={14} />
           </div>
           <div className="topbar-actions">
-            <button className="topbar-button" onClick={() => window.alert("Bu önizlemede güncelleme bağlantısı henüz etkin değil.")}><Sparkles size={14} /> Güncellemeler</button>
-            <button className="icon-button" aria-label="Bildirimler" onClick={() => window.alert("Şimdilik yeni bildirimin yok.")}><Bell size={16} /></button>
+            <button className="topbar-button" onClick={() => window.alert("Bu önizlemede güncelleme bağlantısı etkin değil.")}>
+              <Sparkles size={14} /> Güncellemeler
+            </button>
+            <button className="icon-button" aria-label="Bildirimler" onClick={() => window.alert("Şimdilik yeni bildirimin yok.")}>
+              <Bell size={16} />
+            </button>
             <span className="topbar-separator" /><div className="user-avatar">MP</div>
           </div>
         </header>
+
         <div className="view-toolbar">
           <div className="view-context">
-            <span className="context-chip"><span className="context-symbol">⌘</span> Mekanik Mühendislik</span>
-            <button className="filter-button" onClick={() => setQuery(query ? "" : "MP-")}><ListFilter size={14} /> Filtre</button>
-          </div>
-          <div className="view-actions">
-            <label className="search-box"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Projelerde ara..." /></label>
-            <button className="view-toggle active" aria-label="Liste görünümü"><ListFilter size={15} /></button>
-            <button className="view-toggle" aria-label="Izgara görünümü" onClick={() => window.alert("Izgara görünümünü sonraki adımda tasarlayabiliriz.")}>▦</button>
-            <button className="view-menu" onClick={() => setShowInspector((value) => !value)}><SlidersHorizontal size={14} /> {showInspector ? "Paneli gizle" : "Paneli göster"}</button>
-          </div>
-        </div>
-
-        {activeNav === "Projeler" || activeNav === "Genel Bakış" ? (
-          <div className={"content-layout " + (showInspector ? "" : "without-inspector")}>
-            <section className="project-board">
-              <div className="board-heading">
-                <div><h1>{activeNav}</h1><p>Mekanik mühendislik çalışmalarının genel görünümü</p></div>
-                <button className="primary-button" onClick={() => setShowCreate(true)}><Plus size={15} /> Yeni proje</button>
-              </div>
-              <div className="table-head"><span>PROJE</span><span>KAPSAM</span><span>DURUM</span><span>HEDEF</span><span>İLERLEME</span><span>SORUMLU</span></div>
-              {statusOrder.map((status) => {
-                const items = filteredProjects.filter((project) => project.status === status);
-                if (!items.length) return null;
-                return (
-                  <section className="project-group" key={status}>
-                    <button className="group-heading" onClick={() => setExpandedSection(expandedSection === status ? null : status)}>
-                      <span className={"group-indicator " + stateClass(status)}>{status === "Tamamlandı" ? "✓" : "◌"}</span>
-                      <strong>{status}</strong><small>{items.length}</small><span className="group-spacer" /><Plus size={15} />
-                    </button>
-                    {expandedSection !== status && items.map((project) => (
-                      <button key={project.id} className={"project-row " + (selectedId === project.id ? "selected" : "")} onClick={() => setSelectedId(project.id)}>
-                        <span className="project-identity"><small>{project.id}</small><span><strong>{project.name}</strong><em>{project.updated}</em></span></span>
-                        <span className="scope-cell">{project.scope}</span>
-                        <span><em className={"status-pill " + stateClass(project.status)}><i />{project.status}</em></span>
-                        <span className="date-cell"><CalendarDays size={13} />{project.due}</span>
-                        <span className="progress-cell"><b>{project.progress}%</b><i><span style={{ width: project.progress + "%" }} /></i></span>
-                        <span className="owner-avatar">{project.owner}</span>
-                      </button>
-                    ))}
-                  </section>
-                );
-              })}
-              {!filteredProjects.length && <div className="no-results">Aramana uygun proje bulunamadı.</div>}
-              <div className="board-footer"><span>{filteredProjects.length} proje gösteriliyor</span><span>Örnek veriler · Kalıcı kayıt henüz etkin değil</span></div>
-            </section>
-
-            {showInspector && selectedProject && (
-              <aside className="inspector">
-                <div className="inspector-project">
-                  <div className="inspector-mark">MP</div>
-                  <h2>{selectedProject.name}</h2>
-                  <p>{selectedProject.id} <span>·</span> {selectedProject.location}</p>
-                </div>
-                <div className="inspector-section">
-                  <h3>PROJE ÖZELLİKLERİ</h3>
-                  <div className="property-row"><span>Durum</span><strong className={stateClass(selectedProject.status)}>{selectedProject.status}</strong></div>
-                  <div className="property-row"><span>Proje kodu</span><strong>{selectedProject.id}</strong></div>
-                  <div className="property-row"><span>Kapsam</span><strong>{selectedProject.scope}</strong></div>
-                  <div className="property-row"><span>Sorumlu</span><strong>{selectedProject.owner} · Kullanıcı</strong></div>
-                  <div className="property-row"><span>Hedef tarih</span><strong>{selectedProject.due}</strong></div>
-                  <div className="property-row"><span>Son güncelleme</span><strong>{selectedProject.updated}</strong></div>
-                </div>
-                <div className="inspector-section progress-section">
-                  <div className="section-title-line"><h3>İLERLEME</h3><strong>{selectedProject.progress}%</strong></div>
-                  <svg className="progress-chart" viewBox="0 0 300 124" preserveAspectRatio="none" role="img" aria-label="Örnek proje ilerleme grafiği">
-                    {[20, 48, 76, 104].map((y) => <line key={y} x1="0" y1={y} x2="300" y2={y} className="chart-grid" />)}
-                    <path d="M2 104 C42 96 55 94 87 77 S128 82 151 61 S198 58 225 36 S268 28 298 18" className="chart-line violet-line" />
-                    <path d="M2 108 C35 99 55 85 86 92 S126 79 151 70 S193 65 225 58 S266 61 298 50" className="chart-line yellow-line" />
-                    <circle cx="298" cy="18" r="3" className="chart-point-violet" />
-                    <circle cx="298" cy="50" r="3" className="chart-point-yellow" />
-                  </svg>
-                  <div className="chart-labels"><span>Başlangıç</span><span>Güncel</span></div>
-                  <small className="chart-caption">Örnek ilerleme grafiği</small>
-                </div>
-                <div className="inspector-links">
-                  <button onClick={() => setExpandedSection(expandedSection === "documents" ? null : "documents")}><span><FileText size={14} /> Belgeler</span><ChevronRight size={14} /></button>
-                  {expandedSection === "documents" && <p>Bu projeye henüz belge eklenmedi.</p>}
-                  <button onClick={() => setExpandedSection(expandedSection === "links" ? null : "links")}><span><Link2 size={14} /> Bağlantılar</span><ChevronRight size={14} /></button>
-                  {expandedSection === "links" && <p>Henüz bağlantı eklenmedi.</p>}
-                </div>
-                <div className="inspector-actions">
-                  <button onClick={() => window.alert("Proje çalışma ekranını birlikte tasarlayacağız.")}><ArrowUpRight size={14} /> Projeyi aç</button>
-                  <button onClick={() => window.alert("Proje düzenleme akışını sonraki adımda belirleyebiliriz.")}><MoreHorizontal size={14} /> Diğer işlemler</button>
-                </div>
-              </aside>
+            <span className="context-chip"><span className="context-symbol">⌘</span> Mekanik tasarım ve hesaplama</span>
+            {activeNav === "Projeler" && isProjectDetail && (
+              <button className="filter-button" onClick={() => setIsProjectDetail(false)}><ArrowLeft size={14} /> Projelere dön</button>
             )}
           </div>
-        ) : (
-          <div className="planned-view">
-            <div className="planned-view-icon"><Sparkles size={20} /></div>
-            <span>ÇALIŞMA ALANI</span><h1>{activeNav}</h1>
-            <p>Bu ekranın içeriğini ve işlevlerini birlikte, adım adım belirleyeceğiz.</p>
-            <small>Şimdilik herhangi bir modül veya iş akışı sabitlenmedi.</small>
-          </div>
+          {activeNav === "Projeler" && !isProjectDetail && (
+            <label className="search-box"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Projelerde ara..." /></label>
+          )}
+          {activeNav === "Genel Bakış" && <span className="local-indicator"><i /> YEREL ÇALIŞMA ALANI</span>}
+        </div>
+
+        {activeNav === "Genel Bakış" && (
+          <Overview projects={projects} onOpenProjects={() => goTo("Projeler")} onViewProject={viewProject} />
         )}
+        {activeNav === "Projeler" && !isProjectDetail && (
+          <ProjectsView projects={filteredProjects} total={projects.length} onCreate={openCreate}
+            onView={viewProject} onEdit={openEdit} onDelete={deleteProject} />
+        )}
+        {activeNav === "Projeler" && isProjectDetail && selectedProject && (
+          <ProjectDetail project={selectedProject} onBack={() => setIsProjectDetail(false)}
+            onEdit={() => openEdit(selectedProject)} onDelete={() => deleteProject(selectedProject)} />
+        )}
+        {activeNav === "Projeler" && isProjectDetail && !selectedProject && (
+          <div className="planned-view"><h1>Proje bulunamadı</h1><button className="secondary-button" onClick={() => setIsProjectDetail(false)}>Projelere dön</button></div>
+        )}
+        {activeNav !== "Genel Bakış" && activeNav !== "Projeler" && <PlaceholderView title={activeNav} />}
       </main>
 
-      {showCreate && (
-        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreate(false); }}>
-          <form className="create-modal" onSubmit={createProject}>
-            <button type="button" className="modal-close" onClick={() => setShowCreate(false)} aria-label="Kapat"><X size={17} /></button>
-            <div className="modal-icon"><Plus size={18} /></div>
-            <h2>Yeni proje oluştur</h2>
-            <p>Bu önizlemede proje bilgileri yalnızca bellekte tutulur.</p>
-            <label htmlFor="project-name">PROJE ADI</label>
-            <input id="project-name" autoFocus value={newProjectName} onChange={(event) => setNewProjectName(event.target.value)} placeholder="Örn. Merkez Ofis Mekanik Tesisatı" />
+      {modalMode && (
+        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalMode(null); }}>
+          <form className="create-modal" onSubmit={saveProject}>
+            <button type="button" className="modal-close" onClick={() => setModalMode(null)} aria-label="Kapat"><X size={17} /></button>
+            <div className="modal-icon">{modalMode === "create" ? <Plus size={18} /> : <Pencil size={17} />}</div>
+            <h2>{modalMode === "create" ? "Yeni proje oluştur" : "Projeyi düzenle"}</h2>
+            <p>Proje adı benzersiz olmalıdır. Proje verileri bu bilgisayarda saklanır.</p>
+            <label htmlFor="project-name">PROJE ADI *</label>
+            <input id="project-name" autoFocus value={projectName}
+              onChange={(event) => { setProjectName(event.target.value); setFormError(""); }}
+              placeholder="Örn. Merkez Ofis Mekanik Tesisatı" />
+            <label htmlFor="project-description" className="description-label">AÇIKLAMA</label>
+            <textarea id="project-description" value={projectDescription}
+              onChange={(event) => setProjectDescription(event.target.value)}
+              placeholder="Proje hakkında kısa açıklama..." rows={3} />
+            {formError && <div className="form-error">{formError}</div>}
             <div className="modal-actions">
-              <button type="button" className="cancel-button" onClick={() => setShowCreate(false)}>Vazgeç</button>
-              <button type="submit" className="primary-button" disabled={!newProjectName.trim()}>Projeyi oluştur</button>
+              <button type="button" className="cancel-button" onClick={() => setModalMode(null)}>Vazgeç</button>
+              <button type="submit" className="primary-button">{modalMode === "create" ? "Projeyi oluştur" : "Değişiklikleri kaydet"}</button>
             </div>
           </form>
         </div>
@@ -229,4 +284,118 @@ function App() {
     </div>
   );
 }
+
+function Overview({ projects, onOpenProjects, onViewProject }: {
+  projects: Project[];
+  onOpenProjects: () => void;
+  onViewProject: (project: Project) => void;
+}) {
+  const recent = [...projects].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 4);
+  return (
+    <div className="page-content overview-page">
+      <div className="eyebrow">MEKANİK TASARIM VE HESAPLAMA</div>
+      <h1>Çalışma alanına hoş geldin.</h1>
+      <p className="page-subtitle">Mekanik tesisat projelerini ve mühendislik çalışmalarını tek yerde düzenle.</p>
+      <div className="overview-cards">
+        <article className="overview-card"><div className="card-icon"><FolderKanban size={17} /></div><span>KAYITLI PROJELER</span><strong>{projects.length}</strong><small>Yerel proje arşivindeki toplam kayıt</small></article>
+        <article className="overview-card"><div className="card-icon purple"><Calculator size={17} /></div><span>ÇALIŞMA ODAĞI</span><strong>Tasarım</strong><small>Mühendislik hesapları ve teknik çalışmalar</small></article>
+        <article className="overview-card"><div className="card-icon green"><Archive size={17} /></div><span>VERİ DEPOLAMA</span><strong>Yerel</strong><small>Proje verileri bu bilgisayarda saklanır</small></article>
+      </div>
+      <div className="section-heading">
+        <div><h2>Son açılan projeler</h2><p>Üzerinde en son çalıştığın projelere hızlı erişim.</p></div>
+        <button className="text-button" onClick={onOpenProjects}>Tüm projeler <ArrowUpRight size={14} /></button>
+      </div>
+      <div className="recent-projects">
+        {recent.length === 0 ? (
+          <div className="empty-state"><div className="empty-icon"><FolderKanban size={22} /></div><strong>Henüz kayıtlı proje yok</strong><p>İlk projen oluşturulduğunda burada görünecek. Proje eklemek için Projeler sekmesine geç.</p></div>
+        ) : recent.map((project) => (
+          <button className="recent-project-row" key={project.id} onClick={() => onViewProject(project)}>
+            <div className="project-type-icon">MP</div>
+            <div className="recent-project-name"><strong>{project.name}</strong><small>{project.code}</small></div>
+            <span className="recent-updated">Düzenlendi {formatDate(project.updatedAt)}</span>
+            <ArrowUpRight size={15} className="recent-arrow" />
+          </button>
+        ))}
+      </div>
+      <div className="design-focus-banner"><div className="focus-icon"><Sparkles size={18} /></div><div><strong>MechPro tasarım odaklı geliştiriliyor</strong><p>İmalat ve ilerleme takibi yerine mühendislik tasarımı ve hesaplamalarına odaklanacağız.</p></div></div>
+    </div>
+  );
+}
+
+function ProjectsView({ projects, total, onCreate, onView, onEdit, onDelete }: {
+  projects: Project[]; total: number; onCreate: () => void;
+  onView: (project: Project) => void; onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}) {
+  return (
+    <div className="page-content projects-page">
+      <div className="page-heading">
+        <div><h1>Projeler</h1><p>Mekanik tasarım ve hesaplama çalışmalarını yönet.</p></div>
+        <button className="primary-button" onClick={onCreate}><Plus size={15} /> Yeni proje</button>
+      </div>
+      <div className="project-table">
+        <div className="project-table-head"><span>KOD</span><span>PROJE ADI</span><span>AÇIKLAMA</span><span>SON DÜZENLEME</span><span>İŞLEMLER</span></div>
+        {projects.length === 0 ? (
+          <div className="empty-state table-empty">
+            <div className="empty-icon"><FolderKanban size={22} /></div>
+            <strong>{total === 0 ? "Henüz proje bulunmuyor" : "Aramana uygun proje bulunamadı"}</strong>
+            <p>{total === 0 ? "Yeni proje oluşturarak tasarım çalışmalarını burada düzenleyebilirsin." : "Arama ifadesini değiştirip tekrar deneyebilirsin."}</p>
+          </div>
+        ) : projects.map((project) => (
+          <div className="project-table-row" key={project.id}>
+            <span className="project-code">{project.code}</span>
+            <button className="project-name-button" onClick={() => onView(project)}><strong>{project.name}</strong><small>Proje çalışma alanını görüntüle</small></button>
+            <span className="project-description">{project.description || "—"}</span>
+            <span className="project-date">{formatDate(project.updatedAt)}</span>
+            <div className="project-actions">
+              <button title="Görüntüle" aria-label="Görüntüle" onClick={() => onView(project)}><Eye size={14} /></button>
+              <button title="Düzenle" aria-label="Düzenle" onClick={() => onEdit(project)}><Pencil size={14} /></button>
+              <button title="Sil" aria-label="Sil" className="delete-action" onClick={() => onDelete(project)}><Trash2 size={14} /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="table-footer"><span>{projects.length} / {total} proje gösteriliyor</span><span>Proje verileri yerel olarak saklanır</span></div>
+    </div>
+  );
+}
+
+function ProjectDetail({ project, onBack, onEdit, onDelete }: {
+  project: Project; onBack: () => void; onEdit: () => void; onDelete: () => void;
+}) {
+  return (
+    <div className="page-content detail-page">
+      <button className="back-button" onClick={onBack}><ArrowLeft size={14} /> Projelere dön</button>
+      <div className="detail-heading">
+        <div className="project-type-icon large">MP</div>
+        <div className="detail-title">
+          <div className="eyebrow">PROJE ÇALIŞMA ALANI · {project.code}</div>
+          <h1>{project.name}</h1>
+          <p>Oluşturuldu {formatDate(project.createdAt)} <span>·</span> Son düzenleme {formatDate(project.updatedAt)}</p>
+        </div>
+        <div className="detail-actions">
+          <button className="secondary-button" onClick={onEdit}><Pencil size={14} /> Düzenle</button>
+          <button className="danger-button" onClick={onDelete}><Trash2 size={14} /> Sil</button>
+        </div>
+      </div>
+      <section className="detail-description"><span>PROJE AÇIKLAMASI</span><p>{project.description || "Bu proje için henüz açıklama eklenmemiş."}</p></section>
+      <section className="project-workspace-placeholder">
+        <div className="placeholder-icon"><Sparkles size={20} /></div>
+        <h2>Tasarım ve hesaplama çalışma alanı</h2>
+        <p>Bu proje alanını ihtiyaç duyduğumuz mühendislik tasarımı ve hesaplama modülleriyle adım adım oluşturacağız.</p>
+      </section>
+    </div>
+  );
+}
+
+function PlaceholderView({ title }: { title: string }) {
+  return (
+    <div className="planned-view">
+      <div className="planned-view-icon"><Sparkles size={20} /></div>
+      <span>ÇALIŞMA ALANI</span><h1>{title}</h1>
+      <p>Bu menünün içeriğini ve kullanılacak modülleri ihtiyaçlara göre daha sonra belirleyeceğiz.</p>
+    </div>
+  );
+}
+
 export default App;
