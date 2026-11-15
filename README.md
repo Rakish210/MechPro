@@ -1,52 +1,57 @@
 # MechPro
 
-Offline-first desktop engineering workspace for mechanical building-services engineers.
+Offline-first workspace for mechanical design and engineering calculations.
 
-## Product principles
-- Core project data and engineering calculations work offline.
-- Every calculation exposes inputs, units, assumptions, method, and references.
-- Discipline modules are modular and independently testable.
-- Cloud AI is optional and never replaces deterministic calculation logic.
-- Prefer permissive-licensed dependencies; review all licenses before adoption.
+## Product focus
+- Mechanical building-services design and engineering calculations.
+- No manufacturing workflow, production status, delivery target, progress tracking, or assigned-owner tracking.
+- The navigation labels are provisional and will be reviewed incrementally.
+- Engineering modules will be selected and added step by step based on feedback.
+- Core project data and engineering calculations are intended to work offline.
+- Optional cloud AI will not replace deterministic engineering calculations.
 
-## Planned stack
-- Desktop: Tauri
+## Planned application stack
+- Desktop shell: Tauri
 - UI: React + TypeScript + Vite
 - Engineering services: Python + FastAPI
 - Local database: SQLite
 
 ## Repository layout
-- `main.py`: standalone desktop UI preview (Tkinter)
+- `main.py`: standalone local Tkinter UI preview
 - `backend/`: Python API and engineering services
 - `frontend/`: React desktop UI
 - `docs/`: architecture and development plan
 
-## Run the desktop UI preview
+## Run the local Python UI preview
 
-The current visual prototype is a standalone Tkinter application and uses only Python's standard library.
+From the repository root:
 
 ```bash
 python main.py
 ```
 
-The preview uses sample projects stored in memory. Project data is not saved after the app closes. The preview is not yet wired to the React/Tauri desktop shell or the FastAPI service.
+The preview uses Tkinter and SQLite from Python's standard library. Projects are saved in the current user's MechPro data directory:
 
-## Status
-Foundation stage. The UI layout is an early prototype and will be refined incrementally based on feedback. See `docs/ROADMAP.md` and `docs/ARCHITECTURE.md`.
+- Windows: `%LOCALAPPDATA%/MechPro/mechpro.db`
+- macOS: `~/Library/Application Support/MechPro/mechpro.db`
+- Linux: `~/.local/share/mechpro/mechpro.db` (or `$XDG_DATA_HOME/mechpro/mechpro.db`)
 
-## License
-No project license has been selected yet. Do not assume reuse permissions until a LICENSE file is added.
+Set `MECHPRO_DATA_DIR` to override this location, for example when testing with a temporary database.
 
-## Local development (React/Tauri scaffold)
+Project names are unique after Unicode normalization, whitespace normalization, and case-insensitive comparison. The project list supports view, edit, and delete. The Overview and Projects screens are intentionally different.
 
-Frontend:
+## Run the React UI scaffold
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Python API:
+The React preview persists project metadata in browser local storage. It is currently a separate preview and is not yet synchronized with the Tkinter/SQLite preview or packaged as a connected Tauri application.
+
+## Run the Python API
+
 ```bash
 cd backend
 python -m venv .venv
@@ -56,4 +61,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8765
 pytest
 ```
 
-The Tauri desktop shell is configured in `frontend/src-tauri`. Packaging and supervision of the Python API as a desktop sidecar, plus project persistence, remain follow-up work.
+The Tauri shell is configured under `frontend/src-tauri`. Connecting the desktop shell, API service, and shared persistent project storage remains future work.
+
+## License
+No project license has been selected yet. Do not assume reuse permissions until a `LICENSE` file is added.
