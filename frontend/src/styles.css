@@ -136,7 +136,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 12px; border: 1px solid #7e89ea; border-radius: 5px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 650; white-space: nowrap; }
 .primary-button:hover { background: #818cf0; border-color: #929cf5; }
 .project-table { overflow: hidden; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-alt); }
-.project-table-head, .project-table-row { display: grid; grid-template-columns: 90px minmax(190px, 1.2fr) minmax(160px, 1.3fr) 150px 150px; align-items: center; gap: 12px; }
+.project-table-head, .project-table-row { display: grid; width: 100%; grid-template-columns: 104px minmax(0, 1.15fr) minmax(0, 1.45fr) 178px 142px; align-items: center; gap: 14px; }
+.project-table-head > *, .project-table-row > * { min-width: 0; }
 .project-table-head { min-height: 38px; padding: 0 14px; border-bottom: 1px solid var(--border); color: var(--subtle); font-size: 7px; font-weight: 750; letter-spacing: .7px; }
 .project-table-row { min-height: 65px; padding: 8px 14px; border-bottom: 1px solid var(--border-soft); }
 .project-table-row:last-child { border-bottom: 0; }
@@ -146,7 +147,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .project-name-button small { color: var(--subtle); font-size: 7px; }
 .project-name-button:hover strong { color: #bfc5ff; }
 .project-description { overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.project-date { color: var(--muted); font-size: 8px; }
+.project-date { color: var(--muted); font-size: 8px; white-space: nowrap; }
 .project-actions { display: flex; align-items: center; gap: 5px; }
 .project-actions button { display: grid; place-items: center; width: 29px; height: 28px; border: 1px solid var(--border); border-radius: 5px; background: #202434; color: #bfc3d1; }
 .project-actions button:hover { background: #2c3145; color: #fff; }
@@ -195,12 +196,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .cancel-button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-alt); color: var(--text); font-size: 10px; }
 .cancel-button:hover { background: var(--surface-hover); }
 @media (max-width: 1180px) {
-  .project-table-head, .project-table-row { grid-template-columns: 72px minmax(150px, 1.2fr) minmax(100px, 1.1fr) 125px 132px; gap: 8px; }
+  .project-table-head, .project-table-row { grid-template-columns: 82px minmax(0, 1.1fr) minmax(0, 1.2fr) 165px 136px; gap: 9px; }
   .page-content { padding-left: 25px; padding-right: 25px; }
 }
 @media (max-width: 900px) {
   .sidebar { width: 215px; flex-basis: 215px; }
-  .project-table-head, .project-table-row { grid-template-columns: 65px minmax(140px, 1.3fr) minmax(90px, 1fr) 125px 120px; gap: 7px; padding-left: 9px; padding-right: 9px; }
+  .project-table-head, .project-table-row { grid-template-columns: 72px minmax(0, 1.2fr) minmax(0, 1fr) 145px 126px; gap: 7px; padding-left: 9px; padding-right: 9px; }
   .project-date { font-size: 7px; }
   .project-actions button { width: 26px; height: 26px; }
 }
@@ -225,7 +226,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .recent-updated { display: none; }
   .page-heading { align-items: flex-start; }
   .project-table { overflow-x: auto; }
-  .project-table-head, .project-table-row { min-width: 790px; grid-template-columns: 65px 180px 160px 125px 120px; }
+  .project-table-head, .project-table-row { min-width: 790px; grid-template-columns: 72px 180px minmax(140px, 1fr) 145px 126px; }
   .detail-heading { align-items: flex-start; flex-wrap: wrap; }
   .detail-actions { width: 100%; margin-left: 59px; }
   .table-footer span:last-child { display: none; }
