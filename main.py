@@ -274,7 +274,7 @@ class MechProApp:
 
     def _highlight_nav(self) -> None:
         for name, row in self.nav_buttons.items():
-            color = C["accent_soft"] if self.current_page == name else C["sidebar"]
+            color = C["accent_soft"] if self.active_nav == name else C["sidebar"]
             row.configure(bg=color)
             for widget in row.winfo_children():
                 widget.configure(bg=color, fg="#c5caff" if self.active_nav == name else C["muted"] if widget == row.winfo_children()[0] else "#b5b8c5")
