@@ -167,9 +167,11 @@ class MechProApp:
         self.root.minsize(1080, 680)
         self.root.configure(bg=C["window"])
         self.current_page = "Genel Bakış"
+        self.active_nav = "Genel Bakış"
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *_: self.render_page() if self.current_page == "Projeler" else None)
         self._build_shell()
+        self._highlight_nav()
         self.render_page()
 
     def label(self, parent: tk.Widget, text: str, *, fg: str | None = None,
@@ -267,7 +269,7 @@ class MechProApp:
             widget.bind("<Button-1>", lambda _event, page=title: self.navigate(page))
             widget.bind("<Enter>", lambda _event, target=row: target.configure(bg=C["hover"]))
             widget.bind("<Leave>", lambda _event, target=row, name=title: target.configure(
-                bg=C["accent_soft"] if self.current_page == name else C["sidebar"]
+                bg=C["accent_soft"] if self.active_nav == name else C["sidebar"]
             ))
 
     def _highlight_nav(self) -> None:
@@ -275,7 +277,7 @@ class MechProApp:
             color = C["accent_soft"] if self.current_page == name else C["sidebar"]
             row.configure(bg=color)
             for widget in row.winfo_children():
-                widget.configure(bg=color, fg="#c5caff" if self.current_page == name else C["muted"] if widget == row.winfo_children()[0] else "#b5b8c5")
+                widget.configure(bg=color, fg="#c5caff" if self.active_nav == name else C["muted"] if widget == row.winfo_children()[0] else "#b5b8c5")
 
     def _build_topbar(self) -> None:
         bar = tk.Frame(self.workspace, bg=C["surface"], height=58,
@@ -324,6 +326,7 @@ class MechProApp:
 
     def navigate(self, page: str) -> None:
         self.current_page = page
+        self.active_nav = page
         self._highlight_nav()
         self._build_toolbar()
         self.render_page()
@@ -493,6 +496,9 @@ class MechProApp:
             self.notice("Proje bulunamadı", "Bu proje artık mevcut değil.")
             self.navigate("Projeler")
             return
+        self.current_page = "Proje Detayı"
+        self._build_toolbar()
+        self._highlight_nav()
         for child in self.body.winfo_children():
             child.destroy()
         page = self._page_container()
@@ -604,6 +610,7 @@ class MechProApp:
             dialog.destroy()
             self.search_var.set("")
             self.current_page = "Projeler"
+            self.active_nav = "Projeler"
             self._highlight_nav()
             self._build_toolbar()
             self.view_project(project_id) if editing else self.navigate("Projeler")
