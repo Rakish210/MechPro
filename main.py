@@ -11,8 +11,10 @@ from __future__ import annotations
 import os
 import sqlite3
 import unicodedata
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Iterator
 import tkinter as tk
 from tkinter import messagebox
 
@@ -71,10 +73,18 @@ class ProjectStore:
                 """
             )
 
-    def _connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.database_path)
         connection.row_factory = sqlite3.Row
-        return connection
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
 
     def list_projects(self) -> list[dict[str, object]]:
         with self._connect() as connection:
