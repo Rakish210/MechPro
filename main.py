@@ -367,7 +367,7 @@ class MechProApp:
 
         section = tk.Frame(page, bg=C["surface"])
         section.pack(fill="x", pady=(32, 12))
-        self.label(section, "Son açılan projeler", bg=C["surface"], size=14, weight="bold").pack(side="left")
+        self.label(section, "Son düzenlenen projeler", bg=C["surface"], size=14, weight="bold").pack(side="left")
         self.button(section, "Projeleri görüntüle  →",
                     lambda: self.navigate("Projeler"), compact=True).pack(side="right")
 
