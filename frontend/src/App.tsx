@@ -302,7 +302,7 @@ function Overview({ projects, onOpenProjects, onViewProject }: {
         <article className="overview-card"><div className="card-icon green"><Archive size={17} /></div><span>VERİ DEPOLAMA</span><strong>Yerel</strong><small>Proje verileri bu bilgisayarda saklanır</small></article>
       </div>
       <div className="section-heading">
-        <div><h2>Son açılan projeler</h2><p>Üzerinde en son çalıştığın projelere hızlı erişim.</p></div>
+        <div><h2>Son düzenlenen projeler</h2><p>En son düzenlediğin projelere hızlı erişim.</p></div>
         <button className="text-button" onClick={onOpenProjects}>Tüm projeler <ArrowUpRight size={14} /></button>
       </div>
       <div className="recent-projects">
