@@ -496,6 +496,7 @@ class MechProApp:
             self.notice("Proje bulunamadı", "Bu proje artık mevcut değil.")
             self.navigate("Projeler")
             return
+        self.active_nav = "Projeler"
         self.current_page = "Proje Detayı"
         self._build_toolbar()
         self._highlight_nav()
