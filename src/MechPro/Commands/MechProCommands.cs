@@ -771,13 +771,60 @@ namespace MechPro.Commands
                     return;
                 }
 
+                if (firstEntity.ObjectId == secondEntity.ObjectId)
+                {
+                    editor.WriteMessage("\nBir nesneyi kendi üzerine bağlayamazsınız.");
+                    return;
+                }
+
+                string oldFirstNetwork = first.NetworkId;
+                string oldSecondNetwork = second.NetworkId;
+                string mergedNetwork = Guid.NewGuid().ToString("N");
                 string nodeId = Guid.NewGuid().ToString("N");
                 first.Connectors[firstIndex].NodeId = nodeId;
                 second.Connectors[secondIndex].NodeId = nodeId;
-                first.NetworkId = second.NetworkId = Guid.NewGuid().ToString("N");
 
-                CadObjectDataStore.Write(firstEntity, first, transaction);
-                CadObjectDataStore.Write(secondEntity, second, transaction);
+                BlockTableRecord modelSpace = GetModelSpace(
+                    document.Database, transaction);
+                foreach (ObjectId itemId in modelSpace)
+                {
+                    Entity itemEntity = transaction.GetObject(
+                        itemId, OpenMode.ForRead, false) as Entity;
+                    if (itemEntity == null)
+                        continue;
+
+                    MechProObjectData itemData;
+                    if (itemEntity.ObjectId == firstEntity.ObjectId)
+                        itemData = first;
+                    else if (itemEntity.ObjectId == secondEntity.ObjectId)
+                        itemData = second;
+                    else
+                        itemData = CadObjectDataStore.Read(itemEntity, transaction);
+
+                    if (itemData == null)
+                        continue;
+
+                    bool belongsToMergedNetwork =
+                        (!string.IsNullOrWhiteSpace(oldFirstNetwork) &&
+                         string.Equals(itemData.NetworkId, oldFirstNetwork,
+                             StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrWhiteSpace(oldSecondNetwork) &&
+                         string.Equals(itemData.NetworkId, oldSecondNetwork,
+                             StringComparison.OrdinalIgnoreCase)) ||
+                        itemEntity.ObjectId == firstEntity.ObjectId ||
+                        itemEntity.ObjectId == secondEntity.ObjectId;
+
+                    if (!belongsToMergedNetwork)
+                        continue;
+
+                    if (itemEntity.ObjectId != firstEntity.ObjectId &&
+                        itemEntity.ObjectId != secondEntity.ObjectId)
+                        itemEntity.UpgradeOpen();
+
+                    itemData.NetworkId = mergedNetwork;
+                    CadObjectDataStore.Write(itemEntity, itemData, transaction);
+                }
+
                 transaction.Commit();
 
                 editor.WriteMessage(
