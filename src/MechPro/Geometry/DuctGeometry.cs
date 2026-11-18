@@ -140,6 +140,21 @@ namespace MechPro.Geometry
             return polyline;
         }
 
+
+        public static Polyline BuildPolygon(IList<Point3d> points, double elevation)
+        {
+            if (points == null || points.Count < 3)
+                return null;
+
+            Polyline polyline = new Polyline(points.Count);
+            for (int i = 0; i < points.Count; i++)
+                polyline.AddVertexAt(i,
+                    new Point2d(points[i].X, points[i].Y), 0.0, 0.0, 0.0);
+            polyline.Closed = true;
+            polyline.Elevation = elevation;
+            return polyline;
+        }
+
         public static Polyline BuildReducer(
             Point3d start, Vector2d direction, double inletWidth,
             double outletWidth, double length, double elevation)
