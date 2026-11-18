@@ -791,8 +791,8 @@ namespace MechPro.Commands
             {
                 for (int i = -2; i <= 2; i++)
                     AddLine(database, transaction, modelSpace, layerId,
-                        Move(center, axis, i * length * 0.13 - normal * halfWidth),
-                        Move(center, axis, i * length * 0.13 + normal * halfWidth));
+                        Move(Move(center, axis, i * length * 0.13), normal, -halfWidth),
+                        Move(Move(center, axis, i * length * 0.13), normal, halfWidth));
             }
             else if (kind == "DAMPER" || kind == "FIREDAMPER")
             {
@@ -850,8 +850,8 @@ namespace MechPro.Commands
             else
             {
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, -halfLength * 0.3) - normal * halfWidth * 0.7,
-                    Move(center, axis, halfLength * 0.3) + normal * halfWidth * 0.7);
+                    Move(Move(center, axis, -halfLength * 0.3), normal, -halfWidth * 0.7),
+                    Move(Move(center, axis, halfLength * 0.3), normal, halfWidth * 0.7));
             }
         }
 
