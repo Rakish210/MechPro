@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.GraphicsInterface;
 using Autodesk.AutoCAD.Runtime;
 using MechPro.Domain;
 using MechPro.Geometry;
@@ -973,7 +972,7 @@ namespace MechPro.Commands
             public string Handle;
         }
 
-        private sealed class RoutePointJig : DrawJig
+        private sealed class RoutePointJig : Autodesk.AutoCAD.GraphicsInterface.DrawJig
         {
             private readonly List<Point3d> _fixedRoute;
             private readonly double _width;
@@ -995,9 +994,9 @@ namespace MechPro.Commands
                 _elevation = elevation;
             }
 
-            protected override SamplerStatus Sampler(JigPrompts prompts)
+            protected override Autodesk.AutoCAD.GraphicsInterface.SamplerStatus Sampler(Autodesk.AutoCAD.GraphicsInterface.JigPrompts prompts)
             {
-                JigPromptPointOptions options = new JigPromptPointOptions(
+                Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions options = new Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions(
                     "\nSonraki kanal noktasını seçin (Enter ile bitir): ");
                 Point3d last = _fixedRoute[_fixedRoute.Count - 1];
                 options.BasePoint = last;
@@ -1011,7 +1010,7 @@ namespace MechPro.Commands
                 {
                     FinishRequested = true;
                     _hasCandidate = false;
-                    return SamplerStatus.Cancel;
+                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.Cancel;
                 }
                 if (result.Status != PromptStatus.OK)
                 {
@@ -1027,18 +1026,18 @@ namespace MechPro.Commands
                         _candidatePoint.DistanceTo(snapped) < Tolerance.Global.EqualPoint;
                     _candidatePoint = snapped;
                     _hasCandidate = true;
-                    return unchanged ? SamplerStatus.NoChange : SamplerStatus.OK;
+                    return unchanged ? Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.NoChange : Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.OK;
                 }
 
                 if (_hasCandidate)
                 {
                     _hasCandidate = false;
-                    return SamplerStatus.OK;
+                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.OK;
                 }
-                return SamplerStatus.NoChange;
+                return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.NoChange;
             }
 
-            protected override bool WorldDraw(WorldDraw draw)
+            protected override bool WorldDraw(Autodesk.AutoCAD.GraphicsInterface.WorldDraw draw)
             {
                 List<Point3d> previewRoute = new List<Point3d>(_fixedRoute);
                 if (_hasCandidate)
