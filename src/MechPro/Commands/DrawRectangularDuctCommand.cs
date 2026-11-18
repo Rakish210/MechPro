@@ -4,6 +4,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.GraphicsInterface;
+using AutoCadPolyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
@@ -68,7 +69,7 @@ namespace MechPro.Commands
                 testRoute.Add(next);
 
                 double effectiveRadius;
-                using (Polyline testOutline = BuildOutline(
+                using (AutoCadPolyline testOutline = BuildOutline(
                     testRoute, width, width, startResult.Value.Z, out effectiveRadius))
                 {
                     if (testOutline == null)
@@ -89,7 +90,7 @@ namespace MechPro.Commands
             }
 
             double finalRadius;
-            Polyline finalOutline = BuildOutline(
+            AutoCadPolyline finalOutline = BuildOutline(
                 route, width, width, startResult.Value.Z, out finalRadius);
 
             if (finalOutline == null)
@@ -203,7 +204,7 @@ namespace MechPro.Commands
                 if (previewRoute.Count >= 2)
                 {
                     double ignoredRadius;
-                    using (Polyline preview = BuildOutline(
+                    using (AutoCadPolyline preview = BuildOutline(
                         previewRoute, _width, _requestedRadius, _elevation, out ignoredRadius))
                     {
                         if (preview != null)
@@ -275,7 +276,7 @@ namespace MechPro.Commands
             return true;
         }
 
-        private static Polyline BuildOutline(
+        private static AutoCadPolyline BuildOutline(
             IList<Point3d> route,
             double width,
             double requestedRadius,
@@ -362,7 +363,7 @@ namespace MechPro.Commands
             if (leftSide == null || rightSide == null)
                 return null;
 
-            Polyline outline = new Polyline(leftSide.Count + rightSide.Count);
+            AutoCadPolyline outline = new AutoCadPolyline(leftSide.Count + rightSide.Count);
             int index = 0;
 
             foreach (OutlineVertex vertex in leftSide)
