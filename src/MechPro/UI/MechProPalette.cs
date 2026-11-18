@@ -100,7 +100,7 @@ namespace MechPro.UI
             AddNumberField(root, "Sac kalınlığı (mm)", ref y, out _thicknessInput,
                 0.6m, 0.1m, 20m, 1, 0.1m);
             AddComboField(root, "Malzeme", ref y, out _materialInput);
-            AddComboField(root, "Kanal sistemi", ref y, out _systemInput);
+            AddComboField(root, "Kanal türü / hava sistemi", ref y, out _systemInput);
 
             Label hint = AddHint(root,
                 "Örnek: 400x200 / 0.6. Ölçü, sac kalınlığı, malzeme ve sistem bilgisi kanala kaydedilir. Her sistem kendi layer ve rengini kullanır.",
@@ -133,8 +133,8 @@ namespace MechPro.UI
             Label footer = new Label
             {
                 Text = "MECHPRO  |  PARAMETRİK 2D HVAC",
-                ForeColor = Color.FromArgb(125, 137, 153),
-                Font = new Font("Segoe UI", 7),
+                ForeColor = Color.FromArgb(91, 105, 123),
+                Font = new Font("Segoe UI", 7.5f),
                 AutoSize = true,
                 Location = new Point(18, y + 5)
             };
@@ -238,7 +238,7 @@ namespace MechPro.UI
             return new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(36, 40, 47),
+                BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(16),
                 AutoScroll = true
             };
@@ -249,7 +249,7 @@ namespace MechPro.UI
             Label brand = new Label
             {
                 Text = "MECHPRO",
-                ForeColor = Color.White,
+                ForeColor = Color.FromArgb(25, 42, 64),
                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(16, 16)
@@ -259,8 +259,8 @@ namespace MechPro.UI
             Label sub = new Label
             {
                 Text = subtitle,
-                ForeColor = Color.FromArgb(91, 173, 230),
-                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                ForeColor = Color.FromArgb(28, 112, 178),
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(18, 54)
             };
@@ -272,7 +272,7 @@ namespace MechPro.UI
             Label section = new Label
             {
                 Text = title,
-                ForeColor = Color.FromArgb(91, 173, 230),
+                ForeColor = Color.FromArgb(32, 91, 145),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(18, y)
@@ -288,8 +288,8 @@ namespace MechPro.UI
             Label label = new Label
             {
                 Text = caption,
-                ForeColor = Color.FromArgb(225, 230, 237),
-                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(42, 55, 73),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 AutoSize = true,
                 Location = new Point(18, y)
             };
@@ -306,9 +306,11 @@ namespace MechPro.UI
                 Location = new Point(18, y),
                 Size = new Size(290, 27),
                 Font = new Font("Segoe UI", 10),
-                BackColor = Color.FromArgb(53, 59, 69),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                BackColor = Color.White,
+                ForeColor = Color.FromArgb(25, 39, 58),
+                BorderStyle = BorderStyle.FixedSingle,
+                ThousandsSeparator = true,
+                AutoSize = false
             };
             root.Controls.Add(input);
             y += 42;
@@ -348,7 +350,7 @@ namespace MechPro.UI
             Label hint = new Label
             {
                 Text = text,
-                ForeColor = Color.FromArgb(190, 198, 208),
+                ForeColor = Color.FromArgb(83, 98, 118),
                 Font = new Font("Segoe UI", 8.5f),
                 AutoSize = false,
                 Size = new Size(292, height),
@@ -389,7 +391,9 @@ namespace MechPro.UI
             combo.BeginUpdate();
             combo.DataSource = null;
             combo.Items.Clear();
-            combo.DataSource = new List<CatalogEntry>(entries);
+            combo.DisplayMember = "Name";
+            combo.ValueMember = "Id";
+            combo.DataSource = new List<CatalogEntry>(entries ?? new List<CatalogEntry>());
             SelectCatalogEntry(combo, preferredId);
             combo.EndUpdate();
         }
