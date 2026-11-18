@@ -6,7 +6,7 @@ MechPro is an AutoCAD 2021 add-in for mechanical installation design. Developmen
 
 - Load as a .NET Framework 4.8 add-in in AutoCAD 2021.
 - Provide the `MECHPRO` command.
-- Draw a rectangular duct between two picked points using width and height inputs.
+- Draw a rectangular duct footprint between two picked points using a width input; height is currently collected for information only.
 - Keep geometry and AutoCAD interaction separated so later modules can reuse the core.
 
 ## Requirements
@@ -36,6 +36,10 @@ msbuild .\src\MechPro\MechPro.csproj /p:AutodeskManagedPath="D:\\Autodesk\\AutoC
 ```
 
 The resulting add-in DLL can be loaded in AutoCAD with `NETLOAD`. The first command is `MECHPRO`.
+
+## Automated build
+
+GitHub Actions builds the project on Windows for pushes to `main`, pull requests, and manual workflow dispatch. The CI build uses Autodesk's official AutoCAD 2021 API NuGet package (`AutoCAD.NET 24.0.0`) when the local AutoCAD installation folder is unavailable. After a successful run, download the `MechPro-AutoCAD2021` artifact from the run's **Actions** page. The artifact is a build output; it still needs to be loaded and tested in AutoCAD 2021.
 
 ## Development notes
 
