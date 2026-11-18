@@ -424,8 +424,20 @@ namespace MechPro.Commands
                 Point3d mainEnd = Move(origin, direction, 2.5 * width);
                 Point3d branchEnd = Move(origin, normal, 2.5 * width);
 
-                AddRectangle(shapes, mainStart, mainEnd, width, elevation);
-                AddRectangle(shapes, origin, branchEnd, width, elevation);
+                double half = width / 2.0;
+                List<Point3d> teePoints = new List<Point3d>
+                {
+                    DuctGeometry.Offset(origin, direction, -2.5 * width, -half),
+                    DuctGeometry.Offset(origin, direction,  2.5 * width, -half),
+                    DuctGeometry.Offset(origin, direction,  2.5 * width,  half),
+                    DuctGeometry.Offset(origin, direction,  half, half),
+                    DuctGeometry.Offset(origin, direction,  half, 2.5 * width),
+                    DuctGeometry.Offset(origin, direction, -half, 2.5 * width),
+                    DuctGeometry.Offset(origin, direction, -half, half),
+                    DuctGeometry.Offset(origin, direction, -2.5 * width, half)
+                };
+                Polyline tee = DuctGeometry.BuildPolygon(teePoints, elevation);
+                if (tee != null) shapes.Add(tee);
                 connectors.Add(mainStart);
                 connectors.Add(mainEnd);
                 connectors.Add(branchEnd);
@@ -890,7 +902,13 @@ namespace MechPro.Commands
             LayerTable layerTable = (LayerTable)transaction.GetObject(
                 database.LayerTableId, OpenMode.ForRead);
             if (layerTable.Has(layerName))
-                return layerTable[layerName];
+            {
+                ObjectId existingId = layerTable[layerName];
+                LayerTableRecord existingLayer = (LayerTableRecord)transaction.GetObject(
+                    existingId, OpenMode.ForWrite);
+                existingLayer.Color = ParseColor(system.Color);
+                return existingId;
+            }
 
             layerTable.UpgradeOpen();
             LayerTableRecord layer = new LayerTableRecord
