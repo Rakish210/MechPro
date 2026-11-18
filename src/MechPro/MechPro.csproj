@@ -57,6 +57,7 @@
     <Compile Include="Domain\CadObjectDataStore.cs" />
     <Compile Include="Geometry\DuctGeometry.cs" />
     <Compile Include="UI\MechProPalette.cs" />
+    <Compile Include="UI\CatalogEditorForm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
