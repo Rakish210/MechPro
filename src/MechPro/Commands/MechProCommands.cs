@@ -682,9 +682,25 @@ namespace MechPro.Commands
             }
 
             int freePorts = Math.Max(0, totalPorts - connectedPorts);
+            int[] parents = Enumerable.Range(0, items.Count).ToArray();
+            for (int i = 0; i < items.Count; i++)
+            {
+                for (int j = i + 1; j < items.Count; j++)
+                {
+                    if (ItemsAreConnected(items[i].Data, items[j].Data, tolerance))
+                        Union(parents, i, j);
+                }
+            }
+
+            int networkCount = 0;
+            HashSet<int> roots = new HashSet<int>();
+            for (int i = 0; i < parents.Length; i++)
+                roots.Add(FindRoot(parents, i));
+            networkCount = roots.Count;
+
             editor.WriteMessage(
-                "\nMECHPRO AĞ ANALİZİ: {0} MechPro elemanı, {1} bağlantı portu, {2} bağlı port, {3} açık port. Yakınlık toleransı: {4:0.##} mm.",
-                items.Count, totalPorts, connectedPorts, freePorts, tolerance);
+                "\nMECHPRO AĞ ANALİZİ: {0} MechPro elemanı, {1} bağlantı portu, {2} bağlı port, {3} açık port, {4} bağlantılı ağ grubu. Yakınlık toleransı: {5:0.##} mm.",
+                items.Count, totalPorts, connectedPorts, freePorts, networkCount, tolerance);
 
             foreach (NetworkItem item in items)
             {
@@ -982,6 +998,73 @@ namespace MechPro.Commands
         {
             return new Handle(long.Parse(value, NumberStyles.HexNumber,
                 CultureInfo.InvariantCulture));
+        }
+
+
+        private static bool ItemsAreConnected(
+            MechProObjectData first, MechProObjectData second, double tolerance)
+        {
+            if (!string.IsNullOrWhiteSpace(first.NetworkId) &&
+                string.Equals(first.NetworkId, second.NetworkId,
+                    StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            foreach (MechProConnector a in first.Connectors)
+            {
+                foreach (MechProConnector b in second.Connectors)
+                {
+                    if ((!string.IsNullOrWhiteSpace(a.NodeId) &&
+                        string.Equals(a.NodeId, b.NodeId, StringComparison.OrdinalIgnoreCase)) ||
+                        a.Position.DistanceTo(b.Position) <= tolerance)
+                        return true;
+                }
+
+                if (IsOnDuct(a.Position, second, tolerance))
+                    return true;
+            }
+
+            foreach (MechProConnector b in second.Connectors)
+            {
+                if (IsOnDuct(b.Position, first, tolerance))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool IsOnDuct(
+            Point3d point, MechProObjectData candidate, double tolerance)
+        {
+            if (!string.Equals(candidate.Kind, "Duct", StringComparison.OrdinalIgnoreCase) ||
+                candidate.Route == null || candidate.Route.Count < 2)
+                return false;
+
+            double snapTolerance = Math.Max(tolerance,
+                Math.Min(candidate.Width * 0.08, 40.0));
+            for (int i = 0; i < candidate.Route.Count - 1; i++)
+            {
+                if (DuctGeometry.DistancePointToSegment(
+                    point, candidate.Route[i], candidate.Route[i + 1]) <= snapTolerance)
+                    return true;
+            }
+            return false;
+        }
+
+        private static int FindRoot(int[] parents, int value)
+        {
+            while (parents[value] != value)
+            {
+                parents[value] = parents[parents[value]];
+                value = parents[value];
+            }
+            return value;
+        }
+
+        private static void Union(int[] parents, int first, int second)
+        {
+            int rootA = FindRoot(parents, first);
+            int rootB = FindRoot(parents, second);
+            if (rootA != rootB)
+                parents[rootB] = rootA;
         }
 
         private sealed class NetworkItem
