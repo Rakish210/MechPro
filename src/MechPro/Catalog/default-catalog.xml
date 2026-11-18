@@ -9,7 +9,7 @@
   </Materials>
   <DuctSystems>
     <System id="supply" name="Besleme havası" kind="AirSupply" layer="MP_HAVA_BESLEME" color="#172B64" />
-    <System id="exhaust" name="Emiş havası" kind="AirExhaust" layer="MP_HAVA_EMIS" color="#009688" />
+    <System id="exhaust" name="Emiş havası" kind="AirExhaust" layer="MP_HAVA_EMIS" color="#C62828" />
   </DuctSystems>
   <Fittings>
     <Fitting id="elbow90" name="90° Dirsek" kind="Elbow90" angle="90" lengthFactor="2.0" />
