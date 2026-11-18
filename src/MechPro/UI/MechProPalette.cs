@@ -1,4 +1,5 @@
 using Autodesk.AutoCAD.ApplicationServices;
+using AcApplication = Autodesk.AutoCAD.ApplicationServices.Application;
 using Autodesk.AutoCAD.Windows;
 using System;
 using System.Drawing;
@@ -105,7 +106,7 @@ namespace MechPro.UI
                 DuctWidth = (double)_widthInput.Value;
                 DuctHeight = (double)_heightInput.Value;
 
-                Document document = Application.DocumentManager.MdiActiveDocument;
+                Document document = AcApplication.DocumentManager.MdiActiveDocument;
                 if (document != null)
                     document.SendStringToExecute("MECHPRODRAW\n", true, false, false);
             };
