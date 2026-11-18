@@ -80,18 +80,18 @@ namespace MechPro.UI
 
             Label note = new Label
             {
-                Text = "Başlangıç ve bitiş noktalarını çizim alanından seçin.",
+                Text = "Ölçüleri girin, ardından çizim alanında güzergâhı nokta nokta belirleyin. Enter ile bitirin. İlk sürümde 90° dönüş desteklenir.",
                 ForeColor = Color.FromArgb(190, 198, 208),
                 Font = new Font("Segoe UI", 8.5f),
                 AutoSize = false,
-                Size = new Size(260, 42),
-                Location = new Point(18, 292)
+                Size = new Size(260, 54),
+                Location = new Point(18, 286)
             };
             root.Controls.Add(note);
 
             Button drawButton = new Button
             {
-                Text = "KANAL OLUŞTUR",
+                Text = "GÜZERGÂH ÇİZ",
                 Location = new Point(18, 345),
                 Size = new Size(260, 42),
                 FlatStyle = FlatStyle.Flat,
@@ -114,7 +114,7 @@ namespace MechPro.UI
 
             Label footer = new Label
             {
-                Text = "MECHPRO  |  RECTANGULAR DUCT",
+                Text = "MECHPRO  |  2D DUCT ROUTING",
                 ForeColor = Color.FromArgb(125, 137, 153),
                 Font = new Font("Segoe UI", 7),
                 AutoSize = true,
