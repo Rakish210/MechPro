@@ -108,10 +108,33 @@ namespace MechPro.Domain
             return null;
         }
 
-        public static void OpenCatalog()
+        public static void Save(MechProCatalog catalog)
         {
-            EnsureCatalogFile();
-            Process.Start(new ProcessStartInfo(CatalogPath) { UseShellExecute = true });
+            if (catalog == null)
+                throw new ArgumentNullException("catalog");
+
+            ValidateCatalog(catalog);
+            string folder = Path.GetDirectoryName(CatalogPath);
+            Directory.CreateDirectory(folder);
+
+            string temporaryPath = CatalogPath + ".tmp";
+            string backupPath = CatalogPath + ".bak";
+            XmlSerializer serializer = new XmlSerializer(typeof(MechProCatalog));
+
+            using (FileStream stream = new FileStream(
+                temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                serializer.Serialize(stream, catalog);
+                stream.Flush(true);
+            }
+
+            if (File.Exists(CatalogPath))
+                File.Replace(temporaryPath, CatalogPath, backupPath, true);
+            else
+                File.Move(temporaryPath, CatalogPath);
+
+            lock (SyncRoot)
+                _catalog = catalog;
         }
 
         private static MechProCatalog LoadFromDisk()
