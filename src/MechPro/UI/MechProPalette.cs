@@ -338,13 +338,11 @@ namespace MechPro.UI
                 Font = new Font("Segoe UI", 9.5f),
                 BackColor = Color.White,
                 ForeColor = Color.FromArgb(25, 39, 58),
-                IntegralHeight = false,
-                DropDownHeight = 260,
-                MaxDropDownItems = 12,
-                ItemHeight = 25,
-                DrawMode = DrawMode.OwnerDrawFixed
+                IntegralHeight = true,
+                MaxDropDownItems = 10,
+                DrawMode = DrawMode.Normal,
+                FlatStyle = FlatStyle.Flat
             };
-            input.DrawItem += DrawCatalogItem;
             root.Controls.Add(input);
             y += 43;
         }
@@ -397,9 +395,12 @@ namespace MechPro.UI
             combo.BeginUpdate();
             combo.DataSource = null;
             combo.Items.Clear();
-            combo.DisplayMember = "Name";
-            combo.ValueMember = "Id";
-            combo.DataSource = new List<CatalogEntry>(entries ?? new List<CatalogEntry>());
+
+            // Use ordinary WinForms item rendering. CatalogEntry.ToString() returns Name.
+            // This avoids owner-draw/data-binding interactions in AutoCAD's docked palette.
+            foreach (CatalogEntry entry in entries ?? new List<CatalogEntry>())
+                combo.Items.Add(entry);
+
             SelectCatalogEntry(combo, preferredId);
             combo.EndUpdate();
         }
@@ -461,39 +462,6 @@ namespace MechPro.UI
             }
         }
 
-        private static void DrawCatalogItem(object sender, DrawItemEventArgs e)
-        {
-            ComboBox combo = sender as ComboBox;
-            if (combo == null)
-                return;
-
-            int index = e.Index >= 0 ? e.Index : combo.SelectedIndex;
-            if (index < 0 || index >= combo.Items.Count)
-                return;
-
-            CatalogEntry entry = combo.Items[index] as CatalogEntry;
-            string text = entry == null
-                ? Convert.ToString(combo.Items[index])
-                : entry.Name;
-            bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-            Color background = selected
-                ? Color.FromArgb(218, 235, 250)
-                : Color.White;
-
-            using (SolidBrush brush = new SolidBrush(background))
-                e.Graphics.FillRectangle(brush, e.Bounds);
-
-            TextRenderer.DrawText(
-                e.Graphics,
-                text ?? string.Empty,
-                combo.Font,
-                Rectangle.Inflate(e.Bounds, -7, 0),
-                Color.FromArgb(27, 45, 66),
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
-                TextFormatFlags.EndEllipsis);
-
-            e.DrawFocusRectangle();
-        }
 
         private static void SendCommand(string command)
         {
