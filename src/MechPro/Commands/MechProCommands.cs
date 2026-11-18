@@ -391,11 +391,12 @@ namespace MechPro.Commands
             if (kind == "ELBOW90")
             {
                 Vector2d normal = new Vector2d(-direction.Y, direction.X);
+                double reach = Math.Max(2.0, definition.LengthFactor) * width;
                 List<Point3d> route = new List<Point3d>
                 {
-                    Move(origin, direction, -2.5 * width),
+                    Move(origin, direction, -reach),
                     origin,
-                    Move(origin, normal, 2.5 * width)
+                    Move(origin, normal, reach)
                 };
                 Polyline elbow = DuctGeometry.BuildOutline(route, width, width, elevation);
                 if (elbow != null) shapes.Add(elbow);
@@ -405,16 +406,19 @@ namespace MechPro.Commands
             else if (kind == "PANTS")
             {
                 double half = width / 2.0;
-                double branchLength = 2.8 * width;
-                Vector2d branchA = direction.RotateBy(Math.PI / 6.0);
-                Vector2d branchB = direction.RotateBy(-Math.PI / 6.0);
-                Point3d inlet = Move(origin, direction, -2.2 * width);
+                double branchLength = Math.Max(1.5, definition.LengthFactor) * width;
+                double inletLength = Math.Max(1.0, definition.LengthFactor * 0.75) * width;
+                double branchAngle = (definition.Angle > 5.0 && definition.Angle < 80.0
+                    ? definition.Angle : 30.0) * Math.PI / 180.0;
+                Vector2d branchA = direction.RotateBy(branchAngle);
+                Vector2d branchB = direction.RotateBy(-branchAngle);
+                Point3d inlet = Move(origin, direction, -inletLength);
                 Point3d outletA = Move(origin, branchA, branchLength);
                 Point3d outletB = Move(origin, branchB, branchLength);
 
                 List<Point3d> pantsPoints = new List<Point3d>
                 {
-                    DuctGeometry.Offset(origin, direction, -2.2 * width, -half),
+                    DuctGeometry.Offset(origin, direction, -inletLength, -half),
                     DuctGeometry.Offset(origin, direction, -0.25 * width, -half),
                     DuctGeometry.Offset(origin, branchB, 0, -half),
                     DuctGeometry.Offset(origin, branchB, branchLength, -half),
@@ -425,7 +429,7 @@ namespace MechPro.Commands
                     DuctGeometry.Offset(origin, branchA, branchLength, half),
                     DuctGeometry.Offset(origin, branchA, 0, half),
                     DuctGeometry.Offset(origin, direction, -0.25 * width, half),
-                    DuctGeometry.Offset(origin, direction, -2.2 * width, half)
+                    DuctGeometry.Offset(origin, direction, -inletLength, half)
                 };
                 Polyline pants = DuctGeometry.BuildPolygon(pantsPoints, elevation);
                 if (pants != null) shapes.Add(pants);
@@ -436,21 +440,22 @@ namespace MechPro.Commands
             else if (kind == "TEE")
             {
                 Vector2d normal = new Vector2d(-direction.Y, direction.X);
-                Point3d mainStart = Move(origin, direction, -2.5 * width);
-                Point3d mainEnd = Move(origin, direction, 2.5 * width);
-                Point3d branchEnd = Move(origin, normal, 2.5 * width);
-
                 double half = width / 2.0;
+                double teeReach = Math.Max(2.0, definition.LengthFactor * 1.25) * width;
+                Point3d mainStart = Move(origin, direction, -teeReach);
+                Point3d mainEnd = Move(origin, direction, teeReach);
+                Point3d branchEnd = Move(origin, normal, teeReach);
+
                 List<Point3d> teePoints = new List<Point3d>
                 {
-                    DuctGeometry.Offset(origin, direction, -2.5 * width, -half),
-                    DuctGeometry.Offset(origin, direction,  2.5 * width, -half),
-                    DuctGeometry.Offset(origin, direction,  2.5 * width,  half),
+                    DuctGeometry.Offset(origin, direction, -teeReach, -half),
+                    DuctGeometry.Offset(origin, direction,  teeReach, -half),
+                    DuctGeometry.Offset(origin, direction,  teeReach,  half),
                     DuctGeometry.Offset(origin, direction,  half, half),
-                    DuctGeometry.Offset(origin, direction,  half, 2.5 * width),
-                    DuctGeometry.Offset(origin, direction, -half, 2.5 * width),
+                    DuctGeometry.Offset(origin, direction,  half, teeReach),
+                    DuctGeometry.Offset(origin, direction, -half, teeReach),
                     DuctGeometry.Offset(origin, direction, -half, half),
-                    DuctGeometry.Offset(origin, direction, -2.5 * width, half)
+                    DuctGeometry.Offset(origin, direction, -teeReach, half)
                 };
                 Polyline tee = DuctGeometry.BuildPolygon(teePoints, elevation);
                 if (tee != null) shapes.Add(tee);
@@ -462,7 +467,9 @@ namespace MechPro.Commands
             {
                 Point3d start = origin;
                 double outletWidth = MechProPalette.ReducerOutletWidth;
-                double length = Math.Max(width * 1.5, Math.Abs(width - outletWidth) * 3.0);
+                double length = Math.Max(
+                    width * Math.Max(0.5, definition.LengthFactor),
+                    Math.Abs(width - outletWidth) * 3.0);
                 Polyline reducer = DuctGeometry.BuildReducer(
                     start, direction, width, outletWidth, length, elevation);
                 if (reducer != null) shapes.Add(reducer);
