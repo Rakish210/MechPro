@@ -29,12 +29,12 @@ namespace MechPro.Commands
             double height = UI.MechProPalette.DuctHeight;
 
             PromptPointResult startResult = editor.GetPoint(
-                new PromptPointOptions("\\nKanal başlangıç noktasını seçin: "));
+                new PromptPointOptions("\nKanal başlangıç noktasını seçin: "));
             if (startResult.Status != PromptStatus.OK)
                 return;
 
             PromptPointOptions endOptions = new PromptPointOptions(
-                "\\nKanal bitiş noktasını seçin: ");
+                "\nKanal bitiş noktasını seçin: ");
             endOptions.BasePoint = startResult.Value;
             endOptions.UseBasePoint = true;
 
@@ -45,14 +45,14 @@ namespace MechPro.Commands
             Vector3d direction = endResult.Value - startResult.Value;
             if (direction.Length < Tolerance.Global.EqualPoint)
             {
-                editor.WriteMessage("\\nBaşlangıç ve bitiş noktaları aynı olamaz.");
+                editor.WriteMessage("\nBaşlangıç ve bitiş noktaları aynı olamaz.");
                 return;
             }
 
             Vector3d axis = new Vector3d(direction.X, direction.Y, 0.0);
             if (axis.Length < Tolerance.Global.EqualPoint)
             {
-                editor.WriteMessage("\\nKanal ekseni XY düzleminde olmalıdır.");
+                editor.WriteMessage("\nKanal ekseni XY düzleminde olmalıdır.");
                 return;
             }
 
@@ -88,7 +88,7 @@ namespace MechPro.Commands
             }
 
             editor.WriteMessage(
-                "\\nMechPro: {0:0.##} x {1:0.##} mm kanal izi oluşturuldu. Yükseklik bu aşamada parametre olarak saklanır; plan geometrisine uygulanmaz.",
+                "\nMechPro: {0:0.##} x {1:0.##} mm kanal izi oluşturuldu. Yükseklik bu aşamada parametre olarak saklanır; plan geometrisine uygulanmaz.",
                 width, height);
         }
     }
