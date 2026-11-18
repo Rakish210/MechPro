@@ -15,6 +15,8 @@ MechPro is a modular AutoCAD 2021 add-in for mechanical/HVAC design. The current
 - Catalog-driven 2D HVAC equipment symbols: damper, fire damper, grille, AHU, fan, VAV, silencer, filter and coil.
 - Connector port metadata, automatic proximity-based network audit and manual port connection between selected MechPro objects.
 - Four palette sections: Duct, Fittings, Equipment and Network.
+- Light, high-contrast palette styling with explicit material/system/fitting/equipment dropdown display.
+- In-app catalog manager with editable tables for materials, duct systems, fittings and equipment; saves to the user XML catalog with a backup.
 
 The current fitting and equipment footprints are 2D schematic geometry. They are not yet fabrication-ready sheet-metal assemblies or 3D solids. The airflow, velocity and pressure-loss calculation engine, AI recommendations, 3D modelling and report generation are intentionally deferred.
 
@@ -31,7 +33,7 @@ The XML catalog is the runtime source for:
 - Fitting definitions
 - Equipment definitions
 
-To add a material, system or equipment entry, edit the XML file and run MECHPRORELOADCATALOG (or use the Network palette button). Existing drawing entities retain their saved IDs and technical properties. A system definition controls the AutoCAD layer and true color used for new entities; editing an existing duct and applying its properties moves it to the newly configured layer/color.
+Use the in-app KATALOĞU AÇ / DÜZENLE command to edit the four catalog tables, or edit the XML file manually and run MECHPRORELOADCATALOG (or use the Network palette button). Existing drawing entities retain their saved IDs and technical properties. A system definition controls the AutoCAD layer and true color used for new entities; editing an existing duct and applying its properties moves it to the newly configured layer/color.
 
 Example system entry:
 
