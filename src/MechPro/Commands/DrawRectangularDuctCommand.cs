@@ -10,6 +10,12 @@ namespace MechPro.Commands
     public class DrawRectangularDuctCommand
     {
         [CommandMethod("MECHPRO")]
+        public void ShowMechPro()
+        {
+            UI.MechProPalette.Show();
+        }
+
+        [CommandMethod("MECHPRODRAW")]
         public void DrawRectangularDuct()
         {
             Document document = Application.DocumentManager.MdiActiveDocument;
@@ -19,13 +25,16 @@ namespace MechPro.Commands
             Editor editor = document.Editor;
             Database database = document.Database;
 
+            double width = UI.MechProPalette.DuctWidth;
+            double height = UI.MechProPalette.DuctHeight;
+
             PromptPointResult startResult = editor.GetPoint(
-                new PromptPointOptions("\nKanal başlangıç noktasını seçin: "));
+                new PromptPointOptions("\\nKanal başlangıç noktasını seçin: "));
             if (startResult.Status != PromptStatus.OK)
                 return;
 
             PromptPointOptions endOptions = new PromptPointOptions(
-                "\nKanal bitiş noktasını seçin: ");
+                "\\nKanal bitiş noktasını seçin: ");
             endOptions.BasePoint = startResult.Value;
             endOptions.UseBasePoint = true;
 
@@ -33,46 +42,23 @@ namespace MechPro.Commands
             if (endResult.Status != PromptStatus.OK)
                 return;
 
-            PromptDoubleOptions widthOptions = new PromptDoubleOptions(
-                "\nKanal genişliği: ");
-            widthOptions.AllowNegative = false;
-            widthOptions.AllowZero = false;
-            widthOptions.DefaultValue = 400.0;
-            widthOptions.UseDefaultValue = true;
-
-            PromptDoubleResult widthResult = editor.GetDouble(widthOptions);
-            if (widthResult.Status != PromptStatus.OK)
-                return;
-
-            PromptDoubleOptions heightOptions = new PromptDoubleOptions(
-                "\nKanal yüksekliği (bilgi amaçlı): ");
-            heightOptions.AllowNegative = false;
-            heightOptions.AllowZero = false;
-            heightOptions.DefaultValue = 200.0;
-            heightOptions.UseDefaultValue = true;
-
-            PromptDoubleResult heightResult = editor.GetDouble(heightOptions);
-            if (heightResult.Status != PromptStatus.OK)
-                return;
-
             Vector3d direction = endResult.Value - startResult.Value;
             if (direction.Length < Tolerance.Global.EqualPoint)
             {
-                editor.WriteMessage("\nBaşlangıç ve bitiş noktaları aynı olamaz.");
+                editor.WriteMessage("\\nBaşlangıç ve bitiş noktaları aynı olamaz.");
                 return;
             }
 
-            // Draw the duct footprint in the XY plane, perpendicular to its axis.
             Vector3d axis = new Vector3d(direction.X, direction.Y, 0.0);
             if (axis.Length < Tolerance.Global.EqualPoint)
             {
-                editor.WriteMessage("\nKanal ekseni XY düzleminde olmalıdır.");
+                editor.WriteMessage("\\nKanal ekseni XY düzleminde olmalıdır.");
                 return;
             }
 
             axis = axis.GetNormal();
             Vector3d perpendicular = new Vector3d(-axis.Y, axis.X, 0.0);
-            Vector3d offset = perpendicular * (widthResult.Value / 2.0);
+            Vector3d offset = perpendicular * (width / 2.0);
 
             Point3d p1 = new Point3d(startResult.Value.X, startResult.Value.Y, startResult.Value.Z) + offset;
             Point3d p2 = new Point3d(endResult.Value.X, endResult.Value.Y, endResult.Value.Z) + offset;
@@ -102,9 +88,8 @@ namespace MechPro.Commands
             }
 
             editor.WriteMessage(
-                "\nMechPro: {0:0.##} genişliğinde, {1:0.##} yüksekliğinde kanal izi çizildi. " +
-                "Not: İlk sürüm yalnızca plan görünüşündeki kanal genişliğini çizer; yükseklik henüz geometriye uygulanmaz.",
-                widthResult.Value, heightResult.Value);
+                "\\nMechPro: {0:0.##} x {1:0.##} mm kanal izi oluşturuldu. Yükseklik bu aşamada parametre olarak saklanır; plan geometrisine uygulanmaz.",
+                width, height);
         }
     }
 }
