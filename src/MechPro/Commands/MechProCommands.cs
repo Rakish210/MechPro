@@ -996,7 +996,7 @@ namespace MechPro.Commands
 
             protected override Autodesk.AutoCAD.EditorInput.SamplerStatus Sampler(Autodesk.AutoCAD.EditorInput.JigPrompts prompts)
             {
-                Autodesk.AutoCAD.EditorInput.JigPromptPointOptions options = new Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions(
+                Autodesk.AutoCAD.EditorInput.JigPromptPointOptions options = new Autodesk.AutoCAD.EditorInput.JigPromptPointOptions(
                     "\nSonraki kanal noktasını seçin (Enter ile bitir): ");
                 Point3d last = _fixedRoute[_fixedRoute.Count - 1];
                 options.BasePoint = last;
@@ -1010,12 +1010,12 @@ namespace MechPro.Commands
                 {
                     FinishRequested = true;
                     _hasCandidate = false;
-                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.Cancel;
+                    return Autodesk.AutoCAD.EditorInput.SamplerStatus.Cancel;
                 }
                 if (result.Status != PromptStatus.OK)
                 {
                     _hasCandidate = false;
-                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.Cancel;
+                    return Autodesk.AutoCAD.EditorInput.SamplerStatus.Cancel;
                 }
 
                 Point3d raw = new Point3d(result.Value.X, result.Value.Y, _elevation);
@@ -1026,15 +1026,15 @@ namespace MechPro.Commands
                         _candidatePoint.DistanceTo(snapped) < Tolerance.Global.EqualPoint;
                     _candidatePoint = snapped;
                     _hasCandidate = true;
-                    return unchanged ? Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.NoChange : Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.OK;
+                    return unchanged ? Autodesk.AutoCAD.EditorInput.SamplerStatus.NoChange : Autodesk.AutoCAD.EditorInput.SamplerStatus.OK;
                 }
 
                 if (_hasCandidate)
                 {
                     _hasCandidate = false;
-                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.OK;
+                    return Autodesk.AutoCAD.EditorInput.SamplerStatus.OK;
                 }
-                return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.NoChange;
+                return Autodesk.AutoCAD.EditorInput.SamplerStatus.NoChange;
             }
 
             protected override bool WorldDraw(Autodesk.AutoCAD.GraphicsInterface.WorldDraw draw)
