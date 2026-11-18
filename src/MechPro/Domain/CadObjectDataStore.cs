@@ -107,7 +107,8 @@ namespace MechPro.Domain
                 values.Add(new TypedValue((int)DxfCode.Text, connector.NodeId ?? string.Empty));
             }
 
-            record.Data = new ResultBuffer(values.ToArray());
+            using (ResultBuffer buffer = new ResultBuffer(values.ToArray()))
+                record.Data = buffer;
         }
 
         public static MechProObjectData Read(Entity entity, Transaction transaction)
@@ -122,11 +123,15 @@ namespace MechPro.Domain
 
             Xrecord record = transaction.GetObject(
                 dictionary.GetAt(DictionaryKey), OpenMode.ForRead, false) as Xrecord;
-            if (record == null || record.Data == null)
+            if (record == null)
+                return null;
+
+            ResultBuffer dataBuffer = record.Data;
+            if (dataBuffer == null)
                 return null;
 
             MechProObjectData data = new MechProObjectData();
-            using (ResultBuffer buffer = record.Data)
+            using (ResultBuffer buffer = dataBuffer)
             {
                 TypedValue[] values = buffer.AsArray();
                 if (values.Length == 0 ||
