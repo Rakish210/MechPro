@@ -151,7 +151,6 @@ namespace MechPro.Commands
                 Point3d lastPoint = _fixedRoute[_fixedRoute.Count - 1];
                 options.BasePoint = lastPoint;
                 options.UseBasePoint = true;
-                options.UseDashedLine = true;
                 options.UserInputControls =
                     UserInputControls.NullResponseAccepted |
                     UserInputControls.Accept3dCoordinates;
