@@ -404,15 +404,34 @@ namespace MechPro.Commands
             }
             else if (kind == "PANTS")
             {
-                Vector2d branchA = direction.RotateBy(Math.PI / 4.0);
-                Vector2d branchB = direction.RotateBy(-Math.PI / 4.0);
+                double half = width / 2.0;
+                double branchLength = 2.8 * width;
+                Vector2d mainNormal = new Vector2d(-direction.Y, direction.X);
+                Vector2d branchA = direction.RotateBy(Math.PI / 6.0);
+                Vector2d branchB = direction.RotateBy(-Math.PI / 6.0);
                 Point3d inlet = Move(origin, direction, -2.2 * width);
-                Point3d outletA = Move(origin, branchA, 2.8 * width);
-                Point3d outletB = Move(origin, branchB, 2.8 * width);
+                Point3d outletA = Move(origin, branchA, branchLength);
+                Point3d outletB = Move(origin, branchB, branchLength);
 
-                AddRectangle(shapes, inlet, origin, width, elevation);
-                AddRectangle(shapes, origin, outletA, width, elevation);
-                AddRectangle(shapes, origin, outletB, width, elevation);
+                Vector2d normalA = new Vector2d(-branchA.Y, branchA.X);
+                Vector2d normalB = new Vector2d(-branchB.Y, branchB.X);
+                List<Point3d> pantsPoints = new List<Point3d>
+                {
+                    DuctGeometry.Offset(origin, direction, -2.2 * width, -half),
+                    DuctGeometry.Offset(origin, direction, -0.25 * width, -half),
+                    DuctGeometry.Offset(origin, branchB, 0, -half),
+                    DuctGeometry.Offset(origin, branchB, branchLength, -half),
+                    DuctGeometry.Offset(origin, branchB, branchLength, half),
+                    DuctGeometry.Offset(origin, branchB, 0, half),
+                    DuctGeometry.Offset(origin, branchA, 0, -half),
+                    DuctGeometry.Offset(origin, branchA, branchLength, -half),
+                    DuctGeometry.Offset(origin, branchA, branchLength, half),
+                    DuctGeometry.Offset(origin, branchA, 0, half),
+                    DuctGeometry.Offset(origin, direction, -0.25 * width, half),
+                    DuctGeometry.Offset(origin, direction, -2.2 * width, half)
+                };
+                Polyline pants = DuctGeometry.BuildPolygon(pantsPoints, elevation);
+                if (pants != null) shapes.Add(pants);
                 connectors.Add(inlet);
                 connectors.Add(outletA);
                 connectors.Add(outletB);
