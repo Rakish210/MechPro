@@ -972,7 +972,7 @@ namespace MechPro.Commands
             public string Handle;
         }
 
-        private sealed class RoutePointJig : Autodesk.AutoCAD.GraphicsInterface.DrawJig
+        private sealed class RoutePointJig : Autodesk.AutoCAD.EditorInput.DrawJig
         {
             private readonly List<Point3d> _fixedRoute;
             private readonly double _width;
@@ -994,9 +994,9 @@ namespace MechPro.Commands
                 _elevation = elevation;
             }
 
-            protected override Autodesk.AutoCAD.GraphicsInterface.SamplerStatus Sampler(Autodesk.AutoCAD.GraphicsInterface.JigPrompts prompts)
+            protected override Autodesk.AutoCAD.EditorInput.SamplerStatus Sampler(Autodesk.AutoCAD.EditorInput.JigPrompts prompts)
             {
-                Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions options = new Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions(
+                Autodesk.AutoCAD.EditorInput.JigPromptPointOptions options = new Autodesk.AutoCAD.GraphicsInterface.JigPromptPointOptions(
                     "\nSonraki kanal noktasını seçin (Enter ile bitir): ");
                 Point3d last = _fixedRoute[_fixedRoute.Count - 1];
                 options.BasePoint = last;
