@@ -103,26 +103,21 @@ namespace MechPro.UI
             };
             footer.Controls.Add(path);
 
-            Button cancel = new Button
+            FlowLayoutPanel actions = new FlowLayoutPanel
             {
-                Text = "KAPAT",
-                DialogResult = DialogResult.Cancel,
-                Size = new Size(108, 34),
-                Location = new Point(footer.Width - 246, 27),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(235, 239, 245),
-                ForeColor = Color.FromArgb(41, 55, 74)
+                Dock = DockStyle.Right,
+                Width = 246,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                Padding = new Padding(0, 17, 0, 0),
+                BackColor = Color.White
             };
-            cancel.FlatAppearance.BorderSize = 0;
-            footer.Controls.Add(cancel);
 
             Button save = new Button
             {
                 Text = "KAYDET",
-                Size = new Size(118, 34),
-                Location = new Point(footer.Width - 126, 27),
-                Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
+                Size = new Size(112, 34),
+                Margin = new Padding(8, 0, 0, 0),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(32, 112, 184),
                 ForeColor = Color.White,
@@ -130,7 +125,21 @@ namespace MechPro.UI
             };
             save.FlatAppearance.BorderSize = 0;
             save.Click += SaveCatalog;
-            footer.Controls.Add(save);
+            actions.Controls.Add(save);
+
+            Button cancel = new Button
+            {
+                Text = "KAPAT",
+                DialogResult = DialogResult.Cancel,
+                Size = new Size(108, 34),
+                Margin = new Padding(8, 0, 0, 0),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(235, 239, 245),
+                ForeColor = Color.FromArgb(41, 55, 74)
+            };
+            cancel.FlatAppearance.BorderSize = 0;
+            actions.Controls.Add(cancel);
+            footer.Controls.Add(actions);
 
             Controls.Add(footer);
             AcceptButton = save;
