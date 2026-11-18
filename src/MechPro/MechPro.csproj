@@ -49,11 +49,20 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DrawRectangularDuctCommand.cs" />
+    <Compile Include="Commands\MechProCommands.cs" />
+    <Compile Include="Domain\CatalogService.cs" />
+    <Compile Include="Domain\CadObjectDataStore.cs" />
+    <Compile Include="Geometry\DuctGeometry.cs" />
     <Compile Include="UI\MechProPalette.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Catalog\default-catalog.xml">
+      <LogicalName>MechPro.Catalog.default-catalog.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
