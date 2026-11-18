@@ -322,8 +322,8 @@ namespace MechPro.UI
             Label label = new Label
             {
                 Text = caption,
-                ForeColor = Color.FromArgb(225, 230, 237),
-                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(42, 55, 73),
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 AutoSize = true,
                 Location = new Point(18, y)
             };
@@ -374,9 +374,11 @@ namespace MechPro.UI
                 Size = new Size(290, 39),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = primary
-                    ? Color.FromArgb(36, 128, 190)
-                    : Color.FromArgb(60, 68, 80),
-                ForeColor = Color.White,
+                    ? Color.FromArgb(31, 112, 181)
+                    : Color.FromArgb(226, 233, 242),
+                ForeColor = primary
+                    ? Color.White
+                    : Color.FromArgb(35, 52, 73),
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
@@ -462,12 +464,16 @@ namespace MechPro.UI
         private static void DrawCatalogItem(object sender, DrawItemEventArgs e)
         {
             ComboBox combo = sender as ComboBox;
-            if (combo == null || e.Index < 0 || e.Index >= combo.Items.Count)
+            if (combo == null)
                 return;
 
-            CatalogEntry entry = combo.Items[e.Index] as CatalogEntry;
+            int index = e.Index >= 0 ? e.Index : combo.SelectedIndex;
+            if (index < 0 || index >= combo.Items.Count)
+                return;
+
+            CatalogEntry entry = combo.Items[index] as CatalogEntry;
             string text = entry == null
-                ? Convert.ToString(combo.Items[e.Index])
+                ? Convert.ToString(combo.Items[index])
                 : entry.Name;
             bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
             Color background = selected
