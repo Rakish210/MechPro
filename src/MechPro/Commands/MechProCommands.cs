@@ -1015,7 +1015,7 @@ namespace MechPro.Commands
                 if (result.Status != PromptStatus.OK)
                 {
                     _hasCandidate = false;
-                    return SamplerStatus.Cancel;
+                    return Autodesk.AutoCAD.GraphicsInterface.SamplerStatus.Cancel;
                 }
 
                 Point3d raw = new Point3d(result.Value.X, result.Value.Y, _elevation);
