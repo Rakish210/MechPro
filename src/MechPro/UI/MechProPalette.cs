@@ -334,13 +334,17 @@ namespace MechPro.UI
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Location = new Point(18, y),
-                Size = new Size(290, 28),
-                Font = new Font("Segoe UI", 9),
-                BackColor = Color.FromArgb(53, 59, 69),
-                ForeColor = Color.White,
+                Size = new Size(290, 32),
+                Font = new Font("Segoe UI", 9.5f),
+                BackColor = Color.White,
+                ForeColor = Color.FromArgb(25, 39, 58),
                 IntegralHeight = false,
-                MaxDropDownItems = 12
+                DropDownHeight = 260,
+                MaxDropDownItems = 12,
+                ItemHeight = 25,
+                DrawMode = DrawMode.OwnerDrawFixed
             };
+            input.DrawItem += DrawCatalogItem;
             root.Controls.Add(input);
             y += 43;
         }
@@ -444,13 +448,45 @@ namespace MechPro.UI
         {
             try
             {
-                CatalogService.OpenCatalog();
+                CatalogEditorForm.Open(null);
+                CatalogService.Reload();
+                RefreshCatalogLists();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("MechPro katalogu açılamadı.\n" + ex.Message,
+                MessageBox.Show("MechPro katalog yöneticisi açılamadı.\n" + ex.Message,
                     "MechPro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private static void DrawCatalogItem(object sender, DrawItemEventArgs e)
+        {
+            ComboBox combo = sender as ComboBox;
+            if (combo == null || e.Index < 0 || e.Index >= combo.Items.Count)
+                return;
+
+            CatalogEntry entry = combo.Items[e.Index] as CatalogEntry;
+            string text = entry == null
+                ? Convert.ToString(combo.Items[e.Index])
+                : entry.Name;
+            bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+            Color background = selected
+                ? Color.FromArgb(218, 235, 250)
+                : Color.White;
+
+            using (SolidBrush brush = new SolidBrush(background))
+                e.Graphics.FillRectangle(brush, e.Bounds);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                text ?? string.Empty,
+                combo.Font,
+                Rectangle.Inflate(e.Bounds, -7, 0),
+                Color.FromArgb(27, 45, 66),
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.EndEllipsis);
+
+            e.DrawFocusRectangle();
         }
 
         private static void SendCommand(string command)
