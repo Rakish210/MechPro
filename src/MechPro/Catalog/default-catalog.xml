@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MechProCatalog schemaVersion="1">
+  <Materials>
+    <Material id="galvanized" name="Galvaniz sac" kind="SheetMetal" />
+    <Material id="stainless304" name="Paslanmaz çelik 304" kind="SheetMetal" />
+    <Material id="stainless316" name="Paslanmaz çelik 316" kind="SheetMetal" />
+    <Material id="aluminum" name="Alüminyum" kind="SheetMetal" />
+    <Material id="blackSteel" name="Siyah sac" kind="SheetMetal" />
+  </Materials>
+  <DuctSystems>
+    <System id="supply" name="Besleme havası" kind="AirSupply" layer="MP_HAVA_BESLEME" color="#172B64" />
+    <System id="exhaust" name="Emiş havası" kind="AirExhaust" layer="MP_HAVA_EMIS" color="#009688" />
+  </DuctSystems>
+  <Fittings>
+    <Fitting id="elbow90" name="90° Dirsek" kind="Elbow90" angle="90" lengthFactor="2.0" />
+    <Fitting id="pants" name="Pantolon paçası" kind="Pants" angle="45" lengthFactor="3.0" />
+    <Fitting id="reducer" name="Redüksiyon" kind="Reducer" angle="0" lengthFactor="1.5" />
+    <Fitting id="tee" name="T bağlantı" kind="Tee" angle="90" lengthFactor="2.0" />
+  </Fittings>
+  <Equipment>
+    <Item id="damper" name="Hava ayar damperi" kind="Damper" />
+    <Item id="fireDamper" name="Yangın damperi" kind="FireDamper" />
+    <Item id="grille" name="Menfez" kind="Grille" />
+    <Item id="ahu" name="AHU / Klima santrali" kind="AHU" />
+    <Item id="fan" name="Fan" kind="Fan" />
+    <Item id="vav" name="VAV kutusu" kind="VAV" />
+    <Item id="silencer" name="Susturucu" kind="Silencer" />
+    <Item id="filter" name="Filtre" kind="Filter" />
+    <Item id="coil" name="Isıtma / soğutma serpantini" kind="Coil" />
+  </Equipment>
+</MechProCatalog>
