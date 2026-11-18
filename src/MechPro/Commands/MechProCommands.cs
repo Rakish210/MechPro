@@ -8,6 +8,7 @@ using Autodesk.AutoCAD.Runtime;
 using MechPro.Domain;
 using MechPro.Geometry;
 using MechPro.UI;
+using Polyline = Autodesk.AutoCAD.DatabaseServices.Polyline;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -265,7 +266,6 @@ namespace MechPro.Commands
 
                         for (int i = 0; i < geometry.NumberOfVertices; i++)
                         {
-                            PolylineVertex2dUnused:
                             entity.AddVertexAt(i, geometry.GetPoint2dAt(i),
                                 geometry.GetBulgeAt(i), 0.0, 0.0);
                         }
@@ -797,17 +797,17 @@ namespace MechPro.Commands
             else if (kind == "DAMPER" || kind == "FIREDAMPER")
             {
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, -halfLength * 0.8) - normal * (halfWidth * 0.8),
-                    Move(center, axis, halfLength * 0.8) + normal * (halfWidth * 0.8));
+                    Move(Move(center, axis, -halfLength * 0.8), normal, -halfWidth * 0.8),
+                    Move(Move(center, axis, halfLength * 0.8), normal, halfWidth * 0.8));
                 if (kind == "FIREDAMPER")
                     AddLine(database, transaction, modelSpace, layerId,
-                        Move(center, axis, -halfLength * 0.8) + normal * (halfWidth * 0.8),
-                        Move(center, axis, halfLength * 0.8) - normal * (halfWidth * 0.8));
+                        Move(Move(center, axis, -halfLength * 0.8), normal, halfWidth * 0.8),
+                        Move(Move(center, axis, halfLength * 0.8), normal, -halfWidth * 0.8));
             }
             else if (kind == "AHU")
             {
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, 0), Move(center, axis, 0) + normal * width * 0.75);
+                    center, Move(center, normal, width * 0.75));
                 AddLabel(database, transaction, modelSpace, layerId,
                     "AHU", center, Math.Max(10, width * 0.14), Math.Atan2(axis.Y, axis.X));
             }
@@ -828,24 +828,24 @@ namespace MechPro.Commands
             else if (kind == "VAV")
             {
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, -halfLength * 0.35) - normal * halfWidth * 0.7,
-                    Move(center, axis, halfLength * 0.35) + normal * halfWidth * 0.7);
+                    Move(Move(center, axis, -halfLength * 0.35), normal, -halfWidth * 0.7),
+                    Move(Move(center, axis, halfLength * 0.35), normal, halfWidth * 0.7));
             }
             else if (kind == "SILENCER")
             {
                 for (int i = -1; i <= 1; i++)
                     AddLine(database, transaction, modelSpace, layerId,
-                        Move(center, normal, i * width * 0.2) - axis * halfLength * 0.65,
-                        Move(center, normal, i * width * 0.2) + axis * halfLength * 0.65);
+                        Move(Move(center, normal, i * width * 0.2), axis, -halfLength * 0.65),
+                        Move(Move(center, normal, i * width * 0.2), axis, halfLength * 0.65));
             }
             else if (kind == "FILTER" || kind == "COIL")
             {
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, -halfLength * 0.25) - normal * halfWidth,
-                    Move(center, axis, halfLength * 0.25) + normal * halfWidth);
+                    Move(Move(center, axis, -halfLength * 0.25), normal, -halfWidth),
+                    Move(Move(center, axis, halfLength * 0.25), normal, halfWidth));
                 AddLine(database, transaction, modelSpace, layerId,
-                    Move(center, axis, -halfLength * 0.25) + normal * halfWidth,
-                    Move(center, axis, halfLength * 0.25) - normal * halfWidth);
+                    Move(Move(center, axis, -halfLength * 0.25), normal, halfWidth),
+                    Move(Move(center, axis, halfLength * 0.25), normal, -halfWidth));
             }
             else
             {
