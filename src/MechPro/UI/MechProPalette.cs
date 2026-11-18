@@ -107,7 +107,7 @@ namespace MechPro.UI
 
                 Document document = Application.DocumentManager.MdiActiveDocument;
                 if (document != null)
-                    document.SendStringToExecute("MECHPRODRAW\\n", true, false, false);
+                    document.SendStringToExecute("MECHPRODRAW\n", true, false, false);
             };
             root.Controls.Add(drawButton);
 
