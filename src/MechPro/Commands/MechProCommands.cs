@@ -42,6 +42,7 @@ namespace MechPro.Commands
 
             Editor editor = document.Editor;
             Database database = document.Database;
+            string stage = "katalog yükleme";
 
             try
             {
@@ -59,6 +60,7 @@ namespace MechPro.Commands
                 double height = MechProPalette.DuctHeight;
                 double thickness = MechProPalette.Thickness;
 
+                stage = "güzergâh noktalarının alınması";
                 PromptPointResult startResult = editor.GetPoint(
                     new PromptPointOptions("\nKanal güzergâhının başlangıç noktasını seçin: "));
                 if (startResult.Status != PromptStatus.OK)
@@ -117,6 +119,7 @@ namespace MechPro.Commands
                         return;
                     }
 
+                    stage = "AutoCAD nesnelerinin veritabanına eklenmesi";
                     using (Transaction transaction = database.TransactionManager.StartTransaction())
                     {
                         ObjectId layerId = EnsureLayer(database, transaction, system);
@@ -130,6 +133,7 @@ namespace MechPro.Commands
 
                         LabelPlacement placement = DuctGeometry.GetLabelPlacement(
                             route, width, height);
+                        stage = "kanal ölçü etiketinin oluşturulması";
                         DBText label = CreateText(
                             database, layerId,
                             string.Format(CultureInfo.InvariantCulture,
@@ -155,8 +159,10 @@ namespace MechPro.Commands
                         data.Route.AddRange(route);
                         data.Connectors.Add(new MechProConnector(route[0]));
                         data.Connectors.Add(new MechProConnector(route[route.Count - 1]));
+                        stage = "kanalın teknik verilerinin kaydedilmesi";
                         CadObjectDataStore.Write(outline, data, transaction);
 
+                        stage = "AutoCAD transaction commit";
                         transaction.Commit();
                     }
                 }
@@ -167,7 +173,9 @@ namespace MechPro.Commands
             }
             catch (System.Exception ex)
             {
-                editor.WriteMessage("\nMechPro kanal çizim hatası: " + ex.Message);
+                editor.WriteMessage(
+                    "\nMechPro kanal çizim hatası [" + stage + "] " +
+                    ex.GetType().Name + ": " + ex.Message);
             }
         }
 
@@ -185,7 +193,11 @@ namespace MechPro.Commands
 
             PromptEntityResult result = document.Editor.GetEntity(options);
             if (result.Status != PromptStatus.OK)
+            {
+                document.Editor.WriteMessage(
+                    "\nMechPro: Seçim yapılmadı. Önce başarılı bir MECHPRO kanal çizimi oluşturun; sonra tekrar MECHPROEDIT çalıştırın.");
                 return;
+            }
 
             using (Transaction transaction = document.Database.TransactionManager.StartTransaction())
             {
@@ -1032,13 +1044,13 @@ namespace MechPro.Commands
             label.SetDatabaseDefaults(database);
             label.TextString = text;
             label.Height = height;
-            label.Position = position;
-            label.AlignmentPoint = position;
             label.HorizontalMode = TextHorizontalMode.TextCenter;
             label.VerticalMode = TextVerticalMode.TextVerticalMid;
+            label.Position = position;
             label.Rotation = rotation;
             label.LayerId = layerId;
             label.ColorIndex = 256;
+            label.AlignmentPoint = position;
             return label;
         }
 
